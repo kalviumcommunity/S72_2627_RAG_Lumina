@@ -1,4 +1,4 @@
-# ProtoCite 🏥
+# Lumina 🏥
 
 > **Source-Backed Clinical Protocol Assistant for Hospital On-Call Staff**  
 > *Every clinical fact linked directly to the exact approved clause, version, and effective date.*
@@ -13,7 +13,7 @@
 
 ## ⚠️ Intended Use Statement
 
-> **"ProtoCite retrieves and displays approved institutional documents. It does not provide diagnoses or patient-specific treatment or dosing recommendations. It supports, and does not replace, clinical judgement and institutional escalation."**
+> **"Lumina retrieves and displays approved institutional documents. It does not provide diagnoses or patient-specific treatment or dosing recommendations. It supports, and does not replace, clinical judgement and institutional escalation."**
 
 *Synthetic Data Notice:* All protocols, clinical guidelines, hospital names, doctor names, extensions, and circulars included in this repository are **SYNTHETIC — FOR DEMO ONLY**. No real patient data or proprietary hospital protocols are contained herein.
 
@@ -27,7 +27,7 @@ Hospital networks maintain hundreds of emergency protocols, high-alert medicatio
 2. **Unseen Supersessions:** An emergency circular (e.g., `C-2026-09`) amends a section of an older protocol (`P-ICU-07 §4.2`), but clinicians continue referring to the old rule.
 3. **LLM Hallucination Hazards:** Standard AI chatbots produce plausible medical hallucinations without institutional grounding or audit trails.
 
-### The ProtoCite Solution
+### The Lumina Solution
 - **Clause-Level Ingestion:** Ingests protocols down to leaf clauses (`§4.2.1`) with versioning, effective dates, and supersession links.
 - **Authority-Ranked Hybrid Search:** Merges PostgreSQL full-text search with pgvector dense embeddings, filtered strictly by approval status and boosted by recency and branch jurisdiction.
 - **Safety Gate & Citation Verification:** A deterministic classifier refuses patient-specific dosing/diagnosis requests and escalates immediately to duty contacts. Generated answers undergo sentence-by-sentence verification against cited clauses; uncited or unverified claims are pruned before the answer is delivered.
@@ -135,7 +135,7 @@ For full details and sequence flows, see [docs/architecture.md](docs/architectur
 2. Log in using the Demo Persona selector as **Dr. Kavya Rao (Clinician, Emergency Medicine)**.
 3. Ask: `"What is the heparin infusion nomogram rate change for aPTT above 100 seconds?"`
 4. **Result:**
-   - ProtoCite answers: *"Hold the infusion for 1 hour, then decrease the rate by 3 units/kg/h [S1]."*
+   - Lumina answers: *"Hold the infusion for 1 hour, then decrease the rate by 3 units/kg/h [S1]."*
    - The citation chip links to **Circular C-2026-09 §2.1**, marked with the badge: **"Amends P-ICU-07 §4.2"**.
    - The older rule in `P-ICU-07` (-2 units/kg/h) was superseded on 2026-09-01 and is safely excluded from the clinical recommendation.
 

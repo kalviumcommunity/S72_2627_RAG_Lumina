@@ -57,7 +57,7 @@ export function LoginPage() {
           <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft text-accent-text">
             <Stethoscope className="h-7 w-7" aria-hidden />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">ProtoCite</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Lumina</h1>
           <p className="mx-auto max-w-sm text-sm text-muted">
             Answers from your hospital's approved protocols, drug guidelines and circulars, with the exact
             clause cited.

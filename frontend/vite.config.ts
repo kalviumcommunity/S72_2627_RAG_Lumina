@@ -16,8 +16,8 @@ export default defineConfig({
       injectRegister: "auto",
       includeAssets: ["favicon.svg", "icons/*.png"],
       manifest: {
-        name: "ProtoCite",
-        short_name: "ProtoCite",
+        name: "Lumina",
+        short_name: "Lumina",
         description: "Source-backed answers from approved hospital protocols (synthetic demo corpus).",
         theme_color: "#0b6e8a",
         background_color: "#f6f7f9",

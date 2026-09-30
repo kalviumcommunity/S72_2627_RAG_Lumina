@@ -43,7 +43,7 @@ export function DashboardPage() {
     <AdminPage>
       <PageHeader
         title="Dashboard"
-        description="How ProtoCite is being used, how often it declines to answer, and which gaps in the documents need attention."
+        description="How Lumina is being used, how often it declines to answer, and which gaps in the documents need attention."
         actions={
           <div
             className="flex gap-1 rounded-xl border border-border bg-surface-2 p-1"
@@ -168,7 +168,7 @@ function DashboardBody({ stats }: { stats: Stats }) {
             <SearchX className="h-4 w-4 text-amber" aria-hidden /> Not covered by any document
           </h2>
           <p className="mb-3 text-sm text-muted">
-            Questions ProtoCite could not answer. These are candidates for new protocols or circulars.
+            Questions Lumina could not answer. These are candidates for new protocols or circulars.
           </p>
           <CountList items={stats.unanswered_questions} empty="Every question found a source." />
         </Card>

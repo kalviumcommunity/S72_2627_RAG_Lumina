@@ -49,7 +49,7 @@ export async function streamQuery(
     });
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") throw err;
-    throw new ApiError(0, "network_error", "Cannot reach ProtoCite. Check the connection and try again.");
+    throw new ApiError(0, "network_error", "Cannot reach Lumina. Check the connection and try again.");
   }
   if (!response.ok || !response.body) {
     let message = "The question could not be answered";

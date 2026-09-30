@@ -76,10 +76,10 @@ def create_app() -> FastAPI:
         await dispose_engine()
 
     app = FastAPI(
-        title="ProtoCite API",
+        title="Lumina API",
         version=__version__,
         description=(
-            "Source-backed answers from approved institutional documents. ProtoCite retrieves and displays "
+            "Source-backed answers from approved institutional documents. Lumina retrieves and displays "
             "approved documents; it does not provide diagnoses or patient-specific treatment or dosing "
             "recommendations."
         ),

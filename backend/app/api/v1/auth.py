@@ -108,7 +108,7 @@ async def oidc_callback(request: Request, session: DbSession) -> RedirectRespons
     email = str(claims.get("email", "")).lower()
     user = (await session.execute(select(User).where(User.email == email))).scalar_one_or_none()
     if user is None or not user.is_active:
-        raise UnauthorizedError("No active ProtoCite account for this identity")
+        raise UnauthorizedError("No active Lumina account for this identity")
     access, _ = create_access_token(user.id, user.role)
     await audit.record(
         session,

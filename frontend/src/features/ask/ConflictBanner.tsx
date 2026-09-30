@@ -24,7 +24,7 @@ export function ConflictBanner({
         Approved documents disagree
       </div>
       <p className="mt-1 text-sm">
-        Both values are shown with their sources. ProtoCite does not choose between them — follow local
+        Both values are shown with their sources. Lumina does not choose between them — follow local
         escalation if unsure.
       </p>
       {conflicts.map((conflict, index) => (

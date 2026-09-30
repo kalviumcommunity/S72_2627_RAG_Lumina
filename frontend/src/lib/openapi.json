@@ -3140,8 +3140,8 @@
     }
   },
   "info": {
-    "description": "Source-backed answers from approved institutional documents. ProtoCite retrieves and displays approved documents; it does not provide diagnoses or patient-specific treatment or dosing recommendations.",
-    "title": "ProtoCite API",
+    "description": "Source-backed answers from approved institutional documents. Lumina retrieves and displays approved documents; it does not provide diagnoses or patient-specific treatment or dosing recommendations.",
+    "title": "Lumina API",
     "version": "0.1.0"
   },
   "openapi": "3.1.0",

@@ -74,7 +74,7 @@ async function request<T>(method: string, path: string, options: RequestOptions 
     response = await fetch(url(path, options.query), { method, headers, body, signal: options.signal });
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") throw err;
-    throw new ApiError(0, "network_error", "Cannot reach ProtoCite. Check the connection and try again.");
+    throw new ApiError(0, "network_error", "Cannot reach Lumina. Check the connection and try again.");
   }
   if (!response.ok) throw await toError(response);
   if (response.status === 204) return undefined as T;

@@ -16,7 +16,7 @@ const REASONS: Record<Escalation["reason"], { title: string; icon: ReactNode; to
     tone: "border-border bg-surface-2 text-text",
   },
   out_of_scope: {
-    title: "Outside ProtoCite's scope",
+    title: "Outside Lumina's scope",
     icon: <Info className="h-5 w-5" aria-hidden />,
     tone: "border-border bg-surface-2 text-text",
   },

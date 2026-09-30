@@ -105,7 +105,7 @@ function SourceBody({ source }: { source: Source }) {
               (effective {formatDate(s.effective_from)})
             </span>
           ))}
-          . ProtoCite never cites superseded text in answers.
+          . Lumina never cites superseded text in answers.
         </Banner>
       ) : null}
       {source.newer_version && !source.is_current ? (

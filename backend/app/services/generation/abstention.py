@@ -20,11 +20,11 @@ MESSAGES: dict[str, str] = {
     ),
     "high_risk": (
         "This asks for a patient-specific decision (diagnosis, individual dosing or whether to give or "
-        "withhold treatment). ProtoCite only shows what approved documents say and cannot make this decision. "
+        "withhold treatment). Lumina only shows what approved documents say and cannot make this decision. "
         "Please discuss with a senior clinician or pharmacist."
     ),
     "out_of_scope": (
-        "ProtoCite only answers questions about the network's approved protocols, drug guidelines and circulars."
+        "Lumina only answers questions about the network's approved protocols, drug guidelines and circulars."
     ),
     "clarify": "A little more detail is needed to find the right document.",
     "unavailable": (

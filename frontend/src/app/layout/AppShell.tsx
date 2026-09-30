@@ -79,10 +79,10 @@ export function AppShell() {
           <NavLink
             to="/"
             className="mr-2 flex shrink-0 items-center gap-2 rounded-lg font-semibold"
-            aria-label="ProtoCite home"
+            aria-label="Lumina home"
           >
             <img src="/favicon.svg" alt="" className="h-8 w-8" />
-            <span className="text-lg tracking-tight">ProtoCite</span>
+            <span className="text-lg tracking-tight">Lumina</span>
           </NavLink>
           {items.length > 1 ? (
             <nav aria-label="Main" className="hidden min-w-0 flex-1 items-center gap-1 xl:flex">

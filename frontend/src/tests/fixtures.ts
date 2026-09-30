@@ -72,7 +72,7 @@ export function abstained(
     verification: null,
     escalation: {
       reason,
-      message: "ProtoCite cannot recommend a patient-specific dose.",
+      message: "Lumina cannot recommend a patient-specific dose.",
       clarifying_question: reason === "clarify" ? "Which patient group — adult or paediatric?" : null,
       contacts: [contact()],
     },
