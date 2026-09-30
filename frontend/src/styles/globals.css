@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+/* Design tokens. One accent colour; amber only for conflicts/warnings; red only for errors/overdue.
+   All text/background pairs meet WCAG 2.2 AA (4.5:1) in both themes. */
+:root,
+[data-theme="light"] {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f0f2f5;
+  --surface-3: #e6e9ee;
+  --border: #d9dee5;
+  --border-strong: #b9c1cc;
+  --text: #121821;
+  --text-muted: #525d6b;
+  --accent: #0b6e8a;
+  --accent-hover: #095c74;
+  --accent-fg: #ffffff;
+  --accent-soft: #e2f1f6;
+  --accent-text: #075a71;
+  --amber: #8a4b00;
+  --amber-soft: #fff4e0;
+  --amber-border: #efc27a;
+  --danger: #b3261e;
+  --danger-soft: #fdecea;
+  --danger-border: #f1b0aa;
+  --success: #17703f;
+  --success-soft: #e5f4ec;
+  --focus: #0b6e8a;
+  --highlight: #fff1b8;
+  --highlight-border: #e3b100;
+  --shadow: 0 1px 2px rgb(16 24 40 / 0.06), 0 1px 3px rgb(16 24 40 / 0.08);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0f1318;
+  --surface: #161b22;
+  --surface-2: #1c222b;
+  --surface-3: #242b36;
+  --border: #2b333f;
+  --border-strong: #3d4757;
+  --text: #e8edf3;
+  --text-muted: #a3adbb;
+  --accent: #56c2e0;
+  --accent-hover: #7fd2ea;
+  --accent-fg: #06232c;
+  --accent-soft: #12303b;
+  --accent-text: #7fd2ea;
+  --amber: #f3b95b;
+  --amber-soft: #2c2210;
+  --amber-border: #6b4d17;
+  --danger: #ff8f86;
+  --danger-soft: #341816;
+  --danger-border: #6e2b27;
+  --success: #6fd49d;
+  --success-soft: #11291c;
+  --focus: #7fd2ea;
+  --highlight: #4a3d0c;
+  --highlight-border: #c9a227;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-text: var(--accent-text);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-amber-border: var(--amber-border);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-border: var(--danger-border);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-highlight: var(--highlight);
+  --color-highlight-border: var(--highlight-border);
+  --shadow-card: var(--shadow);
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: var(--accent-soft);
+  }
+  a {
+    color: var(--accent-text);
+  }
+}
+
+@layer components {
+  /* Rendered source text (markdown clauses) */
+  .prose-source {
+    color: var(--text);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  .prose-source p {
+    margin: 0.4rem 0;
+  }
+  .prose-source ul,
+  .prose-source ol {
+    margin: 0.4rem 0;
+    padding-left: 1.25rem;
+  }
+  .prose-source ul {
+    list-style: disc;
+  }
+  .prose-source ol {
+    list-style: decimal;
+  }
+  .prose-source blockquote {
+    border-left: 3px solid var(--border-strong);
+    padding-left: 0.75rem;
+    color: var(--text-muted);
+  }
+  .prose-source table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5rem 0;
+    font-size: 0.875rem;
+  }
+  .prose-source th,
+  .prose-source td {
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.5rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  .prose-source th {
+    background: var(--surface-2);
+    font-weight: 600;
+  }
+  .prose-source strong {
+    font-weight: 650;
+  }
+  /* react-pdf text layer: keep text selectable but invisible over the canvas */
+  .react-pdf__Page__textContent mark {
+    background: rgb(255 214 10 / 0.45);
+    color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

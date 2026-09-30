@@ -1,0 +1,45 @@
+# Words that must never be treated as a person's name by NER-based redaction.
+# One or more terms per line; lines starting with # are ignored. Case-insensitive.
+
+# --- Anticoagulants / haematology
+heparin unfractionated enoxaparin clexane dalteparin fondaparinux warfarin apixaban rivaroxaban dabigatran
+protamine vitamin aptt ptt inr prothrombin thromboplastin fibrinogen cryoprecipitate cryo platelets platelet
+plasma ffp prbc packed red cells blood bank transfusion massive mtp tranexamic txa haemorrhage hemorrhage
+haemoglobin hemoglobin nomogram bolus infusion hit thrombocytopenia anti-xa antixa calcium gluconate
+
+# --- Antimicrobials
+meropenem meronem imipenem ertapenem piperacillin tazobactam piptaz pip-taz tazocin ceftriaxone cefotaxime
+ceftazidime avibactam cefepime cefiderocol cefoperazone sulbactam colistin polymyxin tigecycline vancomycin
+teicoplanin linezolid daptomycin amikacin gentamicin azithromycin doxycycline clindamycin metronidazole
+amoxicillin clavulanate augmentin ampicillin cloxacillin fluconazole voriconazole caspofungin micafungin
+amphotericin antibiotic antibiotics abx antimicrobial stewardship ams carbapenem reserve restricted
+
+# --- High-alert and other medications
+insulin actrapid glargine potassium chloride kcl magnesium sulphate sulfate sodium bicarbonate dextrose
+morphine fentanyl midazolam propofol ketamine noradrenaline norepinephrine adrenaline epinephrine vasopressin
+dopamine dobutamine atracurium rocuronium vecuronium succinylcholine suxamethonium digoxin amiodarone
+methotrexate lasix furosemide paracetamol crocin dolo ondansetron pantoprazole hydrocortisone
+dexamethasone naloxone flumazenil saline ringer lactate crystalloid albumin
+
+# --- Clinical shorthand that NER can mistake for a first name ("Max KCl rate…", "Stat dose…")
+max maximum min minimum stat prn iv im sc po sl od bd tds qds hourly peripheral central line cannula
+
+# --- Clinical terms
+sepsis septic shock qsofa sofa news2 lactate cultures culture hypotension map mean arterial pressure
+vasopressor vasopressors fluids fluid resuscitation icu ed er emergency triage outreach ward theatre
+paediatric pediatric adult neonatal obstetric renal hepatic creatinine egfr crcl dialysis dose dosing
+rate titration monitoring nomogram protocol protocols guideline guidelines circular circulars policy sop
+annex appendix section clause bundle escalation consultant registrar resident pharmacist nurse sister
+matron microbiologist intensivist anaesthetist anesthetist haematologist hematologist on-call oncall
+stat prn sos od bd tds qid nbm iv im sc po ng
+
+# --- Calendar and institutional words
+january february march april may june july august september october november december
+monday tuesday wednesday thursday friday saturday sunday today tomorrow tonight weekend night day
+network hospital hospitals campus branch branches central riverside hillview department pharmacy
+haematology hematology intensive care medicine surgery nursing safety quality demo health dhn
+india indian english hindi
+
+# --- Common sentence starters that NER sometimes mislabels
+what when where which who whom whose why how is are does do can could should would will per according
+tell show give list explain confirm check please hi hello

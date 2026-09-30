@@ -1,0 +1,36 @@
+# SYNTHETIC — FOR DEMO ONLY. Fictional organisation, people and extensions.
+
+branches:
+  - { code: CEN, name: DHN Central Campus }
+  - { code: RIV, name: DHN Riverside }
+  - { code: HIL, name: DHN Hillview }
+
+departments:
+  - { code: ED, name: Emergency Medicine }
+  - { code: ICU, name: Intensive Care }
+  - { code: HAEM, name: Haematology and Blood Bank }
+  - { code: PHARM, name: Pharmacy and Antimicrobial Stewardship }
+  - { code: QPS, name: Quality and Patient Safety }
+
+users:
+  - { email: kavya.rao@dhn.example, name: "Dr Kavya Rao", role: clinician, branch: CEN, department: ED }
+  - { email: arjun.iyer@dhn.example, name: "Dr Arjun Iyer", role: clinician, branch: RIV, department: ED }
+  - { email: leela.das@dhn.example, name: "Sr Leela Das", role: clinician, branch: HIL, department: ICU }
+  - { email: meera.nair@dhn.example, name: "Dr Meera Nair", role: author, branch: CEN, department: ICU }
+  - { email: farah.khan@dhn.example, name: "Dr Farah Khan", role: author, branch: CEN, department: ED }
+  - { email: rahul.verma@dhn.example, name: "Rahul Verma (Pharmacist)", role: author, branch: CEN, department: PHARM }
+  - { email: vikram.shah@dhn.example, name: "Dr Vikram Shah", role: author, branch: CEN, department: HAEM }
+  - { email: sana.qureshi@dhn.example, name: "Dr Sana Qureshi", role: approver, branch: CEN, department: QPS }
+  - { email: nikhil.desai@dhn.example, name: "Nikhil Desai (Admin)", role: admin, branch: CEN, department: QPS }
+
+# escalation_for: which abstention reasons a contact is offered for (empty = all).
+contacts:
+  - { role_label: "Duty senior doctor (network on-call)", phone_ext: "3000", pager: "101", escalation_for: [high_risk, not_found], priority: 10, notes: "24/7. Patient-specific decisions and anything not covered by a document." }
+  - { role_label: "On-call clinical pharmacist", phone_ext: "2230", pager: "220", escalation_for: [high_risk, not_found], priority: 20, notes: "Dosing questions, compatibility, high-alert medicines." }
+  - { role_label: "Critical Care Outreach Team (CCOT)", phone_ext: "3300", phone: "+910000003300", department: ICU, escalation_for: [high_risk], priority: 30, notes: "Deteriorating adult patients, sepsis with lactate 4 or more." }
+  - { role_label: "AMS pharmacist", phone_ext: "2240", department: PHARM, escalation_for: [not_found], priority: 40, notes: "08:00–20:00. Restricted and reserve antimicrobials." }
+  - { role_label: "Blood bank emergency line (Central)", branch: CEN, phone_ext: "2210", department: HAEM, escalation_for: [not_found], priority: 25, notes: "Massive transfusion activation at Central." }
+  - { role_label: "Riverside transfusion coordinator", branch: RIV, phone_ext: "4410", department: HAEM, escalation_for: [not_found], priority: 25, notes: "24/7. Massive transfusion at Riverside." }
+  - { role_label: "Duty doctor — Riverside", branch: RIV, phone_ext: "5000", pager: "501", escalation_for: [high_risk, not_found], priority: 12 }
+  - { role_label: "Duty doctor — Hillview", branch: HIL, phone_ext: "6000", pager: "601", escalation_for: [high_risk, not_found], priority: 12 }
+  - { role_label: "Duty doctor — Central", branch: CEN, phone_ext: "3001", pager: "102", escalation_for: [high_risk, not_found], priority: 12 }

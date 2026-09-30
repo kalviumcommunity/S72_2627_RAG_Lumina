@@ -1,0 +1,117 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: protocite-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: protocite
+      POSTGRES_PASSWORD: change-me-in-prod
+      POSTGRES_DB: protocite
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U protocite -d protocite"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: protocite-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: protocite-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: postgresql+asyncpg://protocite:change-me-in-prod@db:5432/protocite
+      REDIS_URL: redis://redis:6379/0
+      STORAGE_DIR: /data/storage
+      API_BASE_URL: http://localhost:8000
+      WEB_BASE_URL: http://localhost:5173
+      DEV_AUTH: "true"
+      SECRET_KEY: ${SECRET_KEY:-local-development-secret-key-32-chars-min}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OLLAMA_BASE_URL: http://ollama:11434
+    volumes:
+      - storage_data:/data/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: protocite-worker
+    restart: unless-stopped
+    command: ["uv", "run", "arq", "app.workers.worker.WorkerSettings"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: postgresql+asyncpg://protocite:change-me-in-prod@db:5432/protocite
+      REDIS_URL: redis://redis:6379/0
+      STORAGE_DIR: /data/storage
+      DEV_AUTH: "true"
+      SECRET_KEY: ${SECRET_KEY:-local-development-secret-key-32-chars-min}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    volumes:
+      - storage_data:/data/storage
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: protocite-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "5173:80"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: protocite-ollama
+    restart: unless-stopped
+    profiles: ["local-llm"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+
+volumes:
+  pgdata:
+  redisdata:
+  storage_data:
+  ollama_models:

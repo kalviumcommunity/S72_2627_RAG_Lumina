@@ -1,0 +1,153 @@
+# SYNTHETIC — FOR DEMO ONLY.
+# Metadata for the fictional "Demo Health Network" (DHN) sample corpus. Loaded by
+# `make ingest-sample` (backend/scripts/ingest_sample.py) after `make seed`.
+#
+# status: draft | approved | superseded | retired
+# supersessions: `source` is "<doc_code>@<version label>"; `section` omitted = whole document.
+
+approver: sana.qureshi@dhn.example
+
+documents:
+  - doc_code: P-ED-01
+    title: Sepsis Recognition and One-Hour Bundle (Adults)
+    doc_type: protocol
+    department: ED
+    owner: farah.khan@dhn.example
+    applies_to_all_branches: true
+    versions:
+      - label: "1"
+        file: protocols/P-ED-01_sepsis_bundle_v1.md
+        status: superseded
+        effective_from: 2024-03-01
+        review_due: 2026-03-01
+      - label: "2"
+        file: protocols/P-ED-01_sepsis_bundle_v2.md
+        status: approved
+        effective_from: 2025-06-01
+        review_due: 2027-06-01
+
+  - doc_code: P-ICU-07
+    title: Heparin Infusion Protocol (Adult ICU)
+    doc_type: protocol
+    department: ICU
+    owner: meera.nair@dhn.example
+    applies_to_all_branches: true
+    versions:
+      - label: "2"
+        file: protocols/P-ICU-07_heparin_infusion_v2.md
+        status: superseded
+        effective_from: 2024-01-10
+        review_due: 2026-01-10
+      - label: "3"
+        file: protocols/P-ICU-07_heparin_infusion_v3.md
+        status: approved
+        effective_from: 2025-11-01
+        review_due: 2027-11-01
+
+  - doc_code: P-HAEM-02
+    title: Massive Transfusion Protocol (Adults)
+    doc_type: protocol
+    department: HAEM
+    owner: vikram.shah@dhn.example
+    applies_to_all_branches: true
+    versions:
+      - label: "1"
+        file: protocols/P-HAEM-02_massive_transfusion_v1.md
+        status: approved
+        effective_from: 2025-02-01
+        review_due: 2026-08-01   # deliberately overdue: shows in the dashboard's stale list
+
+  - doc_code: SOP-RIV-01
+    title: Massive Transfusion — Riverside Local Arrangements
+    doc_type: sop
+    department: HAEM
+    owner: vikram.shah@dhn.example
+    applies_to_all_branches: false
+    branches: [RIV]
+    versions:
+      - label: "1"
+        file: protocols/SOP-RIV-01_massive_transfusion_riverside_v1.md
+        status: approved
+        effective_from: 2026-04-01
+        review_due: 2027-04-01
+
+  - doc_code: DG-01
+    title: Restricted Antimicrobials Policy
+    doc_type: drug_guideline
+    department: PHARM
+    owner: rahul.verma@dhn.example
+    applies_to_all_branches: true
+    versions:
+      - label: "4"
+        file: drug_guidelines/DG-01_restricted_antibiotics_v4.md
+        status: approved
+        effective_from: 2026-01-15
+        review_due: 2027-01-15
+
+  - doc_code: DG-02
+    title: High-Alert Medications
+    doc_type: drug_guideline
+    department: PHARM
+    owner: rahul.verma@dhn.example
+    applies_to_all_branches: true
+    versions:
+      - label: "2"
+        file: drug_guidelines/DG-02_high_alert_medications_v2.md
+        status: approved
+        effective_from: 2025-09-01
+        review_due: 2026-09-01   # deliberately overdue
+
+  - doc_code: C-2026-09
+    title: Heparin Nomogram Amendment
+    doc_type: circular
+    department: ICU
+    owner: meera.nair@dhn.example
+    applies_to_all_branches: true
+    versions:
+      - label: "1"
+        file: circulars/C-2026-09_heparin_nomogram_amendment.md
+        status: approved
+        effective_from: 2026-09-01
+        review_due: 2027-09-01
+
+  - doc_code: C-2026-11
+    title: Sepsis Antibiotic Timing — Risk-Stratified Targets
+    doc_type: circular
+    department: ED
+    owner: farah.khan@dhn.example
+    applies_to_all_branches: true
+    versions:
+      - label: "1"
+        file: circulars/C-2026-11_sepsis_timing_update_scan.pdf   # scanned: exercises OCR
+        status: approved
+        effective_from: 2026-09-15
+        review_due: 2027-09-15
+
+  - doc_code: C-2026-14
+    title: Piperacillin-Tazobactam Becomes a Restricted Antimicrobial
+    doc_type: circular
+    department: PHARM
+    owner: rahul.verma@dhn.example
+    applies_to_all_branches: true
+    versions:
+      - label: "1"
+        file: circulars/C-2026-14_piperacillin_tazobactam_restriction.md
+        status: draft            # left as a draft for the live "approve a circular" demo
+        effective_from: 2026-09-28
+        review_due: 2027-09-28
+
+supersessions:
+  - source: C-2026-09@1
+    target: P-ICU-07
+    section: "4.2"
+    effective_from: 2026-09-01
+    confirmed: true
+    note: "C-2026-09 replaces the aPTT adjustment nomogram in P-ICU-07 §4.2."
+  - source: C-2026-11@1
+    target: P-ED-01
+    section: "5.3"
+    effective_from: 2026-09-15
+    confirmed: true
+    note: "C-2026-11 replaces the antibiotic timing clause of P-ED-01 §5.3."
+  # C-2026-14 → DG-01 §3.1/§3.2 is NOT listed: ingestion suggests it from the circular's text,
+  # and the approver confirms it live during the demo.

@@ -1,0 +1,112 @@
+[project]
+name = "protocite-backend"
+version = "0.1.0"
+description = "ProtoCite — source-backed clinical protocol assistant (API + worker)"
+readme = "../README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "pydantic-settings",
+    "sqlalchemy[asyncio]",
+    "asyncpg",
+    "alembic",
+    "pgvector",
+    "arq",
+    "redis",
+    "pypdf",
+    "pypdfium2",
+    "python-docx",
+    "beautifulsoup4",
+    "pytesseract",
+    "pillow",
+    "sentence-transformers",
+    "torch",
+    "anthropic",
+    "google-genai",
+    "httpx",
+    "presidio-analyzer",
+    "presidio-anonymizer",
+    "spacy",
+    # Small English NER model for Presidio (name detection); pinned to the spaCy 3.8 series.
+    "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
+    "authlib",
+    "itsdangerous",
+    "pyjwt",
+    "structlog",
+    "opentelemetry-sdk",
+    "opentelemetry-exporter-otlp-proto-http",
+    "python-multipart",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+# Heavy layout-aware parser (downloads layout models on first use). Opt-in via DOCLING_ENABLED=true.
+docling = ["docling"]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+    "types-pyyaml",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+markers = [
+    "integration: needs PostgreSQL (DATABASE_URL / TEST_DATABASE_URL)",
+    "models: needs real embedding / reranker models downloaded",
+    "ocr: needs the tesseract binary",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:spacy.*",
+    "ignore::DeprecationWarning:presidio.*",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["app/db/migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "ASYNC", "S", "SIM", "RUF"]
+ignore = [
+    "S101",   # asserts are fine in tests
+    "S311",   # not crypto
+    "B008",   # FastAPI Depends() in defaults
+    "RUF001", "RUF002", "RUF003",  # unicode section/dash characters are intentional
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B", "E501"]
+"scripts/**" = ["S", "E501"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+exclude = ["app/db/migrations/"]
+
+[[tool.mypy.overrides]]
+module = "app.services.*"
+strict = true

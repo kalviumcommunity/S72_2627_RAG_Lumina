@@ -1,0 +1,74 @@
+# Query normalisation dictionary. Expansions are APPENDED to the query (the original term stays),
+# so both keyword and vector search see the abbreviation and its meaning.
+#
+# case_sensitive: only match the exact uppercase form (avoids "od" in "blood", "IM" vs "I'm").
+
+frequency:
+  OD: { expansion: "once daily", case_sensitive: true }
+  BD: { expansion: "twice daily", case_sensitive: true }
+  BID: { expansion: "twice daily", case_sensitive: true }
+  TDS: { expansion: "three times daily" }
+  TID: { expansion: "three times daily", case_sensitive: true }
+  QID: { expansion: "four times daily" }
+  QDS: { expansion: "four times daily" }
+  HS: { expansion: "at bedtime", case_sensitive: true }
+  SOS: { expansion: "as needed if required", case_sensitive: true }
+  PRN: { expansion: "as needed" }
+  STAT: { expansion: "immediately" }
+
+route:
+  IV: { expansion: "intravenous" }
+  IVI: { expansion: "intravenous infusion" }
+  IM: { expansion: "intramuscular", case_sensitive: true }
+  SC: { expansion: "subcutaneous", case_sensitive: true }
+  SQ: { expansion: "subcutaneous", case_sensitive: true }
+  PO: { expansion: "oral by mouth", case_sensitive: true }
+  NG: { expansion: "nasogastric", case_sensitive: true }
+  NBM: { expansion: "nil by mouth" }
+  NPO: { expansion: "nil by mouth" }
+
+clinical:
+  aPTT: { expansion: "activated partial thromboplastin time APTT" }
+  PTT: { expansion: "partial thromboplastin time aPTT" }
+  INR: { expansion: "international normalised ratio" }
+  MTP: { expansion: "massive transfusion protocol" }
+  TXA: { expansion: "tranexamic acid" }
+  FFP: { expansion: "fresh frozen plasma" }
+  PRBC: { expansion: "packed red blood cells" }
+  RBC: { expansion: "red blood cells" }
+  KCl: { expansion: "potassium chloride" }
+  MAP: { expansion: "mean arterial pressure", case_sensitive: true }
+  AMS: { expansion: "antimicrobial stewardship", case_sensitive: true }
+  ID: { expansion: "infectious diseases", case_sensitive: true }
+  HIT: { expansion: "heparin-induced thrombocytopenia", case_sensitive: true }
+  UFH: { expansion: "unfractionated heparin" }
+  LMWH: { expansion: "low molecular weight heparin enoxaparin" }
+  abx: { expansion: "antibiotics" }
+  qSOFA: { expansion: "quick sepsis-related organ failure assessment" }
+  ICU: { expansion: "intensive care unit" }
+  ED: { expansion: "emergency department", case_sensitive: true }
+  CCOT: { expansion: "critical care outreach team" }
+  RRT: { expansion: "rapid response team" }
+  DNAR: { expansion: "do not attempt resuscitation" }
+  pip-taz: { expansion: "piperacillin-tazobactam" }
+  piptaz: { expansion: "piperacillin-tazobactam" }
+  "pip taz": { expansion: "piperacillin-tazobactam" }
+  vanc: { expansion: "vancomycin" }
+  mero: { expansion: "meropenem" }
+
+# Brand -> generic (only brands relevant to the synthetic sample corpus).
+brands:
+  Tazocin: { expansion: "piperacillin-tazobactam" }
+  Zosyn: { expansion: "piperacillin-tazobactam" }
+  Meronem: { expansion: "meropenem" }
+  Merrem: { expansion: "meropenem" }
+  Clexane: { expansion: "enoxaparin low molecular weight heparin" }
+  Lovenox: { expansion: "enoxaparin low molecular weight heparin" }
+  Augmentin: { expansion: "amoxicillin-clavulanate" }
+  Lasix: { expansion: "furosemide" }
+  Actrapid: { expansion: "regular insulin" }
+  Cyklokapron: { expansion: "tranexamic acid" }
+  Targocid: { expansion: "teicoplanin" }
+  Tygacil: { expansion: "tigecycline" }
+  Fetroja: { expansion: "cefiderocol" }
+  Zavicefta: { expansion: "ceftazidime-avibactam" }
