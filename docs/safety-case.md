@@ -1,4 +1,4 @@
-# Safety Case & Clinical Risk Management — ProtoCite
+# Safety Case & Clinical Risk Management — Lumina
 
 **Document Version:** 1.0  
 **Target Standard Alignment:** ISO 14971 (Application of risk management to medical devices) & India DPDP Act 2023.
@@ -20,7 +20,7 @@
 ## 2. Independent Citation Verification Gate
 
 Unlike traditional RAG systems that display LLM outputs directly:
-1. ProtoCite enforces that every sentence asserting a clinical fact must carry an explicit marker `[S1]`, `[S2]`.
+1. Lumina enforces that every sentence asserting a clinical fact must carry an explicit marker `[S1]`, `[S2]`.
 2. An independent verification judge tests each claim sentence against the exact snippet cited.
 3. If the support score falls below threshold (`0.80`), the claim is pruned from the answer.
 4. If no valid clinical claims remain, the system automatically falls back to an abstention (`not_found`), preventing ungrounded prose from reaching the clinician.
@@ -32,4 +32,4 @@ Unlike traditional RAG systems that display LLM outputs directly:
 Under India's **Digital Personal Data Protection Act (DPDP Act 2023)** and Digital Personal Data Protection Rules:
 - **Zero Raw PII Storage:** Queries containing patient identifiable data are sanitized in-memory prior to database persistence.
 - **Data Residency Mode:** When `LLM_PROVIDER=ollama` is configured, all model inference executes entirely on-premises with zero network egress. Cloud LLM modes require an India-region enterprise endpoint with a signed Business Associate / Data Processing Agreement.
-- **Configurable Retention:** Query logs default to 180 days retention, after which automated cleanup purging applies.
+- **Retention:** `LOG_RETENTION_DAYS` (default 180) sets the intended retention for query logs. *The automatic purge job is not implemented yet* — until it is, old logs must be removed by a scheduled database task. The audit log is append-only by design and is never purged.

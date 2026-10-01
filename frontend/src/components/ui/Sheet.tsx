@@ -8,6 +8,7 @@ export function Sheet({
   open,
   onOpenChange,
   title,
+  eyebrow,
   description,
   children,
   footer,
@@ -15,6 +16,7 @@ export function Sheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: ReactNode;
+  eyebrow?: ReactNode;
   description?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
@@ -22,22 +24,21 @@ export function Sheet({
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/40 data-[state=open]:animate-[fade-in_150ms_ease-out]" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-primary/50" />
         <DialogPrimitive.Content
           className={clsx(
-            "fixed z-50 flex flex-col bg-surface text-text shadow-2xl outline-none",
-            "inset-x-0 bottom-0 max-h-[92dvh] rounded-t-3xl border-t border-border",
-            "md:inset-y-0 md:right-0 md:left-auto md:max-h-none md:w-[min(760px,92vw)] md:rounded-none md:rounded-l-2xl md:border-l md:border-t-0",
+            "fixed z-50 flex flex-col bg-canvas text-ink outline-none",
+            "inset-x-0 bottom-0 max-h-[92dvh] rounded-t-lg",
+            "md:inset-y-0 md:left-auto md:right-0 md:max-h-none md:w-[min(760px,92vw)] md:rounded-none",
           )}
         >
-          <div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-border-strong md:hidden" aria-hidden />
-          <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-3">
+          <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-hairline md:hidden" aria-hidden />
+          <div className="flex items-start justify-between gap-4 border-b border-hairline px-6 py-5">
             <div className="min-w-0">
-              <DialogPrimitive.Title className="text-lg font-semibold leading-snug">
-                {title}
-              </DialogPrimitive.Title>
+              {eyebrow ? <div className="mono-label mb-1.5 text-muted">{eyebrow}</div> : null}
+              <DialogPrimitive.Title className="text-card-heading">{title}</DialogPrimitive.Title>
               {description ? (
-                <DialogPrimitive.Description className="mt-0.5 text-sm text-muted">
+                <DialogPrimitive.Description className="mt-1 text-caption text-muted">
                   {description}
                 </DialogPrimitive.Description>
               ) : (
@@ -45,14 +46,14 @@ export function Sheet({
               )}
             </div>
             <DialogPrimitive.Close
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl hover:bg-surface-2"
+              className="-mr-2 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full hover:bg-stone"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
             </DialogPrimitive.Close>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">{children}</div>
-          {footer ? <div className="border-t border-border px-5 py-3">{footer}</div> : null}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">{children}</div>
+          {footer ? <div className="border-t border-hairline px-6 py-4">{footer}</div> : null}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

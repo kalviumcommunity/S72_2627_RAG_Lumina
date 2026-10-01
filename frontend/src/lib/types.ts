@@ -55,6 +55,10 @@ export type AuditEvent = S["AuditEventOut"];
 export type AuditVerify = S["AuditVerifyOut"];
 export type ReferenceData = S["ReferenceData"];
 export type ContactEntry = S["ContactAdminOut"];
+export type Overview = S["OverviewOut"];
+export type AIUsage = S["AIUsageOut"];
+export type AIDecision = S["AIDecision"];
+export type UserUsage = S["UserUsage"];
 
 export type Role = User["role"];
 

@@ -1,5 +1,3 @@
-import { CalendarCheck } from "lucide-react";
-
 import { Badge, type Tone } from "../../components/ui/Badge";
 import { formatDate } from "../../lib/format";
 
@@ -24,9 +22,9 @@ export function VersionBadge({
 }) {
   const tone: Tone = status ? (STATUS_TONE[status] ?? "neutral") : "accent";
   return (
-    <span className="inline-flex flex-wrap items-center gap-1.5">
-      <Badge tone={tone}>
-        <CalendarCheck className="h-3 w-3" aria-hidden />v{version} · effective {formatDate(effectiveFrom)}
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <Badge tone="accent">
+        v{version} · effective {formatDate(effectiveFrom)}
       </Badge>
       {status && status !== "approved" ? <Badge tone={tone}>{status}</Badge> : null}
       {current ? <Badge tone="success">Current version</Badge> : null}

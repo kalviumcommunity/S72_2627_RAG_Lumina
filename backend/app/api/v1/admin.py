@@ -247,6 +247,8 @@ async def update_conflict(
     conflict.resolution_note = body.resolution_note
     if body.status != ConflictStatus.open:
         conflict.resolved_by, conflict.resolved_at = user.id, datetime.now(UTC)
+    else:  # re-opened: it is no longer resolved by anyone
+        conflict.resolved_by, conflict.resolved_at = None, None
     await audit.record(
         session,
         action="conflict.updated",
@@ -340,7 +342,7 @@ async def audit_export(
         return StreamingResponse(
             iter([buffer.getvalue()]),
             media_type="text/csv",
-            headers={"Content-Disposition": 'attachment; filename="protocite-audit.csv"'},
+            headers={"Content-Disposition": 'attachment; filename="lumina-audit.csv"'},
         )
     return rows
 

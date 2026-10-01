@@ -1,6 +1,6 @@
-# Product Requirements Document (PRD) — ProtoCite
+# Product Requirements Document (PRD) — Lumina
 
-**Project:** ProtoCite  
+**Project:** Lumina  
 **Role:** Source-Backed Clinical Protocol Assistant  
 **Status:** MVP Implemented & Validated  
 
@@ -15,7 +15,7 @@ During time-critical patient care decisions, on-call clinical staff (residents, 
 2. **Supersession Ambiguity:** A newly issued circular amends §4.2 of an ICU protocol, but older printouts or digital copies remain in circulation.
 3. **General LLM Hallucination Risk:** Off-the-shelf generative models hallucinate plausible clinical dosages and cannot verify against specific institutional policies.
 
-**ProtoCite** solves this by delivering an authoritative, source-backed retrieval and question-answering assistant restricted strictly to approved institutional documents.
+**Lumina** solves this by delivering an authoritative, source-backed retrieval and question-answering assistant restricted strictly to approved institutional documents.
 
 ---
 

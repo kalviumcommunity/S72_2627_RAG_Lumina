@@ -83,6 +83,17 @@ function Start-Db {
   # Start-Process (not &): pg_ctl's server must not inherit this console's handles.
   Start-Process -FilePath (Join-Path $PgBin "pg_ctl.exe") -ArgumentList @("-D", "`"$PgData`"", "-l", "`"$PgLog`"", "-o", "`"-p $PgPort`"", "start") -WindowStyle Hidden | Out-Null
   if (-not (Wait-Port $PgPort 30)) { Fail "PostgreSQL did not start; see $PgLog" }
+  $ready = Join-Path $PgBin "pg_isready.exe"
+  if (Test-Path $ready) {
+    $deadline = (Get-Date).AddSeconds(30)
+    while ((Get-Date) -lt $deadline) {
+      & $ready -p $PgPort -q
+      if ($LASTEXITCODE -eq 0) { break }
+      Start-Sleep -Milliseconds 500
+    }
+  } else {
+    Start-Sleep -Seconds 2
+  }
 }
 
 function Stop-Db {

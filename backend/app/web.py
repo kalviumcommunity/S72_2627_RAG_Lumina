@@ -20,7 +20,7 @@ WEB_CSP = (
     "worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; "
     "form-action 'self'; frame-ancestors 'none'"
 )
-_NO_CACHE = {"index.html", "sw.js", "registerSW.js", "manifest.webmanifest", "theme-init.js"}
+_NO_CACHE = {"index.html", "sw.js", "registerSW.js", "manifest.webmanifest"}
 _RESERVED = ("api/", "docs", "openapi.json")
 
 

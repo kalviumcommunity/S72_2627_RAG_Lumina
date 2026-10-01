@@ -20,7 +20,7 @@ def setup_telemetry(app: FastAPI, settings: Settings) -> bool:
         from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-        provider = TracerProvider(resource=Resource.create({"service.name": "protocite-api"}))
+        provider = TracerProvider(resource=Resource.create({"service.name": "lumina-api"}))
         provider.add_span_processor(
             BatchSpanProcessor(
                 OTLPSpanExporter(endpoint=settings.otel_exporter_otlp_endpoint.rstrip("/") + "/v1/traces")

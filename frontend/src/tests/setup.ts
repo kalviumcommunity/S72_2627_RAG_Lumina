@@ -8,7 +8,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// jsdom gaps used by Radix / motion / the Ask page.
+// jsdom gaps used by Radix and the Ask page.
 if (!("ResizeObserver" in window)) {
   class ResizeObserverStub {
     observe(): void {}

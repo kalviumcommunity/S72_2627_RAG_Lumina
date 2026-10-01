@@ -1,6 +1,6 @@
 # P-ED-01 Sepsis Six Pathway (Adults)
 
-> **SYNTHETIC — FOR DEMO ONLY.** Fictional document written for the ProtoCite demo corpus of the fictional "Demo Health Network" (DHN). It is not clinical guidance and must not be used for patient care. **This version has been superseded by version 2.**
+> **SYNTHETIC — FOR DEMO ONLY.** Fictional document written for the Lumina demo corpus of the fictional "Demo Health Network" (DHN). It is not clinical guidance and must not be used for patient care. **This version has been superseded by version 2.**
 
 | Field | Value |
 |---|---|

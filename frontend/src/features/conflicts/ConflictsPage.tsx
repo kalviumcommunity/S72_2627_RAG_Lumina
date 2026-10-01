@@ -1,55 +1,52 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { clsx } from "clsx";
-import { CheckCircle2, ShieldCheck, TriangleAlert, XCircle } from "lucide-react";
+import { Check, ShieldCheck, X } from "lucide-react";
 import { useState } from "react";
 
-import { AdminPage, PageHeader } from "../../app/layout/AppShell";
+import { Page, PageHeader } from "../../app/layout/Page";
 import { Badge, type Tone } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Dialog } from "../../components/ui/Dialog";
 import { EmptyState, ErrorNotice } from "../../components/ui/EmptyState";
 import { Field, Textarea } from "../../components/ui/Field";
+import { Segmented } from "../../components/ui/Segmented";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { useToast } from "../../components/ui/Toast";
 import { api, errorMessage } from "../../lib/api";
 import { formatDate, percent, relativeTime, sectionLabel } from "../../lib/format";
+import { queries, queryKeys } from "../../lib/queries";
 import type { AdminConflict } from "../../lib/types";
 
 type Status = AdminConflict["status"];
 const TONE: Record<Status, Tone> = { open: "amber", resolved: "success", dismissed: "neutral" };
+const FOUND_BY: Record<string, string | undefined> = {
+  query: "while answering a question",
+  ingest: "when the document was approved",
+  user: "by a user",
+};
 
 /** Contradictions between current documents (found at ingest or while answering) for owners to fix. */
 export function ConflictsPage() {
   const [show, setShow] = useState<"open" | "all">("open");
   const [acting, setActing] = useState<{ conflict: AdminConflict; status: Status } | null>(null);
-  const conflicts = useQuery({
-    queryKey: ["conflicts", show],
-    queryFn: () => api.get<AdminConflict[]>("/conflicts", show === "open" ? { status: "open" } : undefined),
-  });
+  const conflicts = useQuery(queries.conflicts(show));
 
   return (
-    <AdminPage>
+    <Page title="Conflicts">
       <PageHeader
+        eyebrow="Review"
         title="Conflicts"
         description="Two current documents giving different values for the same step. Clinicians see both values with a warning until the owner resolves it."
         actions={
-          <div className="flex gap-1 rounded-xl border border-border bg-surface-2 p-1">
-            {(["open", "all"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={show === value}
-                onClick={() => setShow(value)}
-                className={clsx(
-                  "min-h-9 rounded-lg px-3 text-sm",
-                  show === value ? "bg-surface font-medium shadow-card" : "text-muted",
-                )}
-              >
-                {value === "open" ? "Open" : "All"}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            label="Show"
+            value={show}
+            onChange={setShow}
+            options={[
+              ["open", "Open"],
+              ["all", "All"],
+            ]}
+          />
         }
       />
       {conflicts.isLoading ? (
@@ -57,71 +54,75 @@ export function ConflictsPage() {
       ) : conflicts.isError ? (
         <ErrorNotice message={errorMessage(conflicts.error)} />
       ) : !conflicts.data?.length ? (
-        <EmptyState icon={<ShieldCheck className="h-8 w-8 text-success" />} title="No open conflicts">
+        <EmptyState icon={<ShieldCheck className="h-6 w-6" />} title="No open conflicts">
           Current documents agree with each other on the values checked.
         </EmptyState>
       ) : (
-        <div className="space-y-4">
+        <ul className="space-y-6">
           {conflicts.data.map((c) => (
-            <Card key={c.id} className="p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <p className="flex flex-wrap items-center gap-2 font-semibold">
-                    <TriangleAlert className="h-4 w-4 text-amber" aria-hidden />
-                    {c.a.doc_code} {sectionLabel(c.a.section_path)} vs {c.b.doc_code}{" "}
-                    {sectionLabel(c.b.section_path)}
-                    <Badge tone={TONE[c.status]}>{c.status}</Badge>
-                  </p>
-                  <p className="text-sm text-muted">
-                    Found{" "}
-                    {c.detected_by === "query"
-                      ? "while answering a question"
-                      : c.detected_by === "ingest"
-                        ? "when the document was approved"
-                        : "by a user"}{" "}
-                    {relativeTime(c.created_at)}
-                    {c.confidence !== null ? ` · confidence ${percent(c.confidence)}` : ""}
-                    {c.owner ? ` · owner ${c.owner}` : ""}
-                  </p>
-                </div>
-                {c.status === "open" ? (
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => setActing({ conflict: c, status: "resolved" })}>
-                      <CheckCircle2 className="h-4 w-4" /> Resolve
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setActing({ conflict: c, status: "dismissed" })}
-                    >
-                      <XCircle className="h-4 w-4" /> Dismiss
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-              <p className="mt-2 text-sm">{c.description}</p>
-              <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-                {[c.a, c.b].map((side) => (
-                  <div key={side.chunk_id} className="rounded-xl border border-border bg-surface-2 p-3">
-                    <p className="text-sm font-semibold">
-                      {side.doc_code} v{side.version} {sectionLabel(side.section_path)}
-                    </p>
-                    <p className="text-xs text-muted">
-                      {side.title} · effective {formatDate(side.effective_from)}
-                    </p>
-                    <p className="mt-2 whitespace-pre-line text-sm">{side.text}</p>
-                  </div>
-                ))}
-              </div>
-              {c.resolution_note ? (
-                <p className="mt-2 text-sm text-muted">Resolution: {c.resolution_note}</p>
-              ) : null}
-            </Card>
+            <li key={c.id}>
+              <ConflictCard conflict={c} onAct={(status) => setActing({ conflict: c, status })} />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
       {acting ? <ResolveDialog key={acting.conflict.id} {...acting} onClose={() => setActing(null)} /> : null}
-    </AdminPage>
+    </Page>
+  );
+}
+
+/** A conflict read like a comparison table: the claim, then both clauses side by side. */
+function ConflictCard({ conflict: c, onAct }: { conflict: AdminConflict; onAct: (status: Status) => void }) {
+  return (
+    <Card className="p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="max-w-3xl space-y-2">
+          <p className="flex flex-wrap items-center gap-3">
+            <span className="text-sm font-medium">
+              {c.a.doc_code} {sectionLabel(c.a.section_path)} · {c.b.doc_code}{" "}
+              {sectionLabel(c.b.section_path)}
+            </span>
+            <Badge tone={TONE[c.status]}>{c.status}</Badge>
+          </p>
+          <p className="text-lg leading-snug">{c.description}</p>
+          <p className="text-caption text-muted">
+            Found {FOUND_BY[c.detected_by] ?? "by a user"} {relativeTime(c.created_at)}
+            {c.confidence !== null ? ` · confidence ${percent(c.confidence)}` : ""}
+            {c.owner ? ` · owner ${c.owner}` : ""}
+          </p>
+        </div>
+        {c.status === "open" ? (
+          <div className="flex items-center gap-4">
+            <Button size="sm" onClick={() => onAct("resolved")}>
+              <Check className="h-4 w-4" /> Resolve
+            </Button>
+            <Button variant="link" size="sm" onClick={() => onAct("dismissed")}>
+              <X className="h-4 w-4" /> Dismiss
+            </Button>
+          </div>
+        ) : null}
+      </div>
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        {[c.a, c.b].map((side, i) => (
+          <div key={side.chunk_id} className="rounded-sm bg-stone p-5">
+            <p className="mono-label text-muted">Source {i === 0 ? "A" : "B"}</p>
+            <p className="mt-2 font-medium">
+              {side.doc_code} v{side.version} {sectionLabel(side.section_path)}
+            </p>
+            <p className="text-micro text-muted">
+              {side.title} · effective {formatDate(side.effective_from)}
+            </p>
+            <p className="mt-3 whitespace-pre-line text-sm">{side.text}</p>
+          </div>
+        ))}
+      </div>
+      {c.resolution_note ? (
+        <p className="mt-5 border-t border-hairline pt-4 text-caption">
+          <span className="mono-label mr-2 text-muted">Resolution</span>
+          {c.resolution_note}
+        </p>
+      ) : null}
+    </Card>
   );
 }
 
@@ -142,7 +143,7 @@ function ResolveDialog({
       api.patch<AdminConflict>(`/conflicts/${conflict.id}`, { status, resolution_note: note.trim() || null }),
     onSuccess: () => {
       notify(status === "resolved" ? "Conflict resolved" : "Conflict dismissed");
-      void queryClient.invalidateQueries({ queryKey: ["conflicts"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.conflicts });
       onClose();
     },
   });
@@ -160,7 +161,7 @@ function ResolveDialog({
       }
     >
       <form
-        className="space-y-3"
+        className="space-y-5"
         onSubmit={(e) => {
           e.preventDefault();
           save.mutate();
@@ -172,8 +173,8 @@ function ResolveDialog({
           )}
         </Field>
         {save.error ? <ErrorNotice message={errorMessage(save.error)} /> : null}
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>
+        <div className="flex items-center justify-end gap-4">
+          <Button variant="link" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit" loading={save.isPending} disabled={!note.trim()}>

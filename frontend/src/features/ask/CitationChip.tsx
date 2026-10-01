@@ -1,5 +1,3 @@
-import { clsx } from "clsx";
-
 import { Tooltip } from "../../components/ui/Tooltip";
 import { sectionLabel } from "../../lib/format";
 import type { Citation } from "../../lib/types";
@@ -15,7 +13,7 @@ export function CitationChip({
   onOpen: (chunkId: string) => void;
 }) {
   if (!citation) {
-    return <span className="text-xs text-muted">[{marker}]</span>;
+    return <span className="font-mono text-xs text-muted">[{marker}]</span>;
   }
   const label = `${citation.doc_code} ${sectionLabel(citation.section_path)}`;
   return (
@@ -24,11 +22,7 @@ export function CitationChip({
         type="button"
         onClick={() => onOpen(citation.chunk_id)}
         aria-label={`Open source ${marker}: ${label}`}
-        className={clsx(
-          "mx-0.5 inline-flex min-h-6 translate-y-[-1px] items-center rounded-md border px-1.5 align-middle",
-          "border-accent/30 bg-accent-soft font-mono text-[0.72rem] font-semibold text-accent-text",
-          "hover:border-accent hover:bg-accent hover:text-accent-fg",
-        )}
+        className="mx-0.5 inline-flex min-h-6 translate-y-[-2px] items-center rounded-xs border border-primary px-1.5 align-middle font-mono text-[0.7rem] transition-colors hover:bg-primary hover:text-white"
       >
         {marker}
       </button>

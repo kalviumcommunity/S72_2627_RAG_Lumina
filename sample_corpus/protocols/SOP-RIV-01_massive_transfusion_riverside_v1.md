@@ -1,6 +1,6 @@
 # SOP-RIV-01 Massive Transfusion — Riverside Local Arrangements
 
-> **SYNTHETIC — FOR DEMO ONLY.** Fictional document written for the ProtoCite demo corpus of the fictional "Demo Health Network" (DHN). It is not clinical guidance and must not be used for patient care.
+> **SYNTHETIC — FOR DEMO ONLY.** Fictional document written for the Lumina demo corpus of the fictional "Demo Health Network" (DHN). It is not clinical guidance and must not be used for patient care.
 
 | Field | Value |
 |---|---|

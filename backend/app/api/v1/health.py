@@ -56,7 +56,7 @@ async def health(session: DbSession, services: ServicesDep) -> dict[str, Any]:
         "embedding": services.embedder.model_id,
         "reranker": services.reranker.model_id,
         "nli": bool(services.nli),
-        "pii_engine": services.redactor.engine,
+        "pii_engine": services.redactor.status,
     }
     status = "ok" if checks["db"]["ok"] and checks["llm"]["ok"] else ("degraded" if checks["db"]["ok"] else "down")
     return {"status": status, "version": __version__, "checks": checks}

@@ -7,7 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 LLMProviderName = Literal["gemini", "anthropic", "ollama", "none"]
@@ -122,6 +122,20 @@ class Settings(BaseSettings):
     @classmethod
     def _empty_date_is_none(cls, value: object) -> object:
         return None if value in ("", None) else value
+
+    @model_validator(mode="after")
+    def _refuse_unsafe_production(self) -> Settings:
+        """APP_ENV=prod must not start with the demo secret or the password-less demo sign-in."""
+        if self.app_env != "prod":
+            return self
+        problems = []
+        if self.secret_key == "change-me" or len(self.secret_key) < 32:  # noqa: S105
+            problems.append("SECRET_KEY must be a random string of at least 32 characters")
+        if self.dev_auth:
+            problems.append("DEV_AUTH must be false (demo sign-in lets anyone act as any user)")
+        if problems:
+            raise ValueError("Unsafe production settings: " + "; ".join(problems))
+        return self
 
     @property
     def is_prod(self) -> bool:

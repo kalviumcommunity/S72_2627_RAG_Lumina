@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 
@@ -10,7 +9,6 @@ import { RequireRole } from "./RequireRole";
 
 let session: Session | null = null;
 vi.mock("./providers", () => ({ useAuth: () => ({ session }) }));
-vi.mock("./layout/AppShell", () => ({ AdminPage: ({ children }: { children: ReactNode }) => children }));
 
 function renderAt(role: Role | null, required: Role) {
   session = role ? { token: "t", expiresAt: Date.now() + 60_000, user: user(role) } : null;

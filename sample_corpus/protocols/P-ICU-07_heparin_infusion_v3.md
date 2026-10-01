@@ -1,6 +1,6 @@
 # P-ICU-07 Heparin Infusion Protocol (Adult ICU)
 
-> **SYNTHETIC — FOR DEMO ONLY.** Fictional document written for the ProtoCite demo corpus of the fictional "Demo Health Network" (DHN). It is not clinical guidance and must not be used for patient care.
+> **SYNTHETIC — FOR DEMO ONLY.** Fictional document written for the Lumina demo corpus of the fictional "Demo Health Network" (DHN). It is not clinical guidance and must not be used for patient care.
 
 | Field | Value |
 |---|---|
@@ -69,4 +69,4 @@ Heparin is a high-alert medication (see DG-02). Two registered nurses must indep
 
 ## 7 Escalation
 
-Contact the ICU registrar on call for any aPTT above 150 seconds, any bleeding, or a platelet count below 100 x 10^9/L. Out of hours, the on-call clinical pharmacist advises on infusion preparation and compatibility (see the escalation directory in ProtoCite).
+Contact the ICU registrar on call for any aPTT above 150 seconds, any bleeding, or a platelet count below 100 x 10^9/L. Out of hours, the on-call clinical pharmacist advises on infusion preparation and compatibility (see the escalation directory in Lumina).

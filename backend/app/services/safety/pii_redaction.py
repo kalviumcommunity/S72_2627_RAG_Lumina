@@ -259,6 +259,13 @@ class PIIRedactor:
                 log.warning("presidio_unavailable_falling_back_to_regex", error_type=type(exc).__name__)
                 self._analyzer = None
 
+    @property
+    def status(self) -> str:
+        """Engine in use, or the requested one while it is still loading lazily (first question)."""
+        if not self._ready and self._requested_engine == "presidio":
+            return "presidio (loads on first question)"
+        return self.engine
+
     def warmup(self) -> None:
         self._init_presidio()
         self.redact("warmup")

@@ -1,45 +1,45 @@
 import { useQuery } from "@tanstack/react-query";
-import { clsx } from "clsx";
-import { ChevronRight, FileStack, Loader2, Search, Upload } from "lucide-react";
+import { ArrowRight, Search, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 
-import { AdminPage, PageHeader } from "../../app/layout/AppShell";
-import { Badge } from "../../components/ui/Badge";
+import { Page, PageHeader } from "../../app/layout/Page";
+import { paths } from "../../app/paths";
+import { Badge, TaxonomyChip } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
-import { Card } from "../../components/ui/Card";
 import { EmptyState, ErrorNotice } from "../../components/ui/EmptyState";
-import { Input, Select } from "../../components/ui/Field";
+import { Input } from "../../components/ui/Field";
+import { Segmented } from "../../components/ui/Segmented";
 import { Skeleton } from "../../components/ui/Skeleton";
-import { api, errorMessage } from "../../lib/api";
+import { errorMessage } from "../../lib/api";
 import { daysUntil, formatDate } from "../../lib/format";
-import type { DocumentSummary, Version } from "../../lib/types";
+import { queries } from "../../lib/queries";
+import type { DocType, DocumentSummary } from "../../lib/types";
 import { DOC_TYPE_LABEL } from "./labels";
-import { StatusBadge } from "./shared";
 import { UploadDialog } from "./UploadDialog";
 
 type Filter = "all" | "pending" | "overdue";
+const isProcessing = (d: DocumentSummary) =>
+  d.versions.some((v) => ["pending", "processing"].includes(v.ingest_status));
 
+/** Every protocol, guideline and circular with its versions and review state; upload new ones. */
 export function DocumentsPage() {
-  const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [type, setType] = useState("all");
-  const [params] = useSearchParams();
+  const [type, setType] = useState<DocType | "all">("all");
+  const [params, setParams] = useSearchParams();
   const initial = params.get("filter");
-  const [filter, setFilter] = useState<Filter>(
+  const [filter, setFilterState] = useState<Filter>(
     initial === "pending" || initial === "overdue" ? initial : "all",
   );
+  const setFilter = (next: Filter) => {
+    setFilterState(next);
+    setParams(next === "all" ? {} : { filter: next }, { replace: true });
+  };
   const [uploadOpen, setUploadOpen] = useState(false);
   const docs = useQuery({
-    queryKey: ["documents"],
-    queryFn: () => api.get<DocumentSummary[]>("/documents"),
+    ...queries.documents(),
     // Keep polling while any version is still being processed.
-    refetchInterval: (query) =>
-      query.state.data?.some((d) =>
-        d.versions.some((v) => ["pending", "processing"].includes(v.ingest_status)),
-      )
-        ? 2000
-        : false,
+    refetchInterval: (query) => (query.state.data?.some(isProcessing) ? 2000 : false),
   });
 
   const rows = useMemo(() => {
@@ -53,14 +53,16 @@ export function DocumentsPage() {
     });
   }, [docs.data, search, type, filter]);
 
-  const pendingCount = (docs.data ?? []).filter((d) => d.versions.some((v) => v.status === "draft")).length;
-  const overdueCount = (docs.data ?? []).filter((d) => d.review_overdue).length;
+  const all = docs.data ?? [];
+  const pendingCount = all.filter((d) => d.versions.some((v) => v.status === "draft")).length;
+  const overdueCount = all.filter((d) => d.review_overdue).length;
 
   return (
-    <AdminPage>
+    <Page title="Library">
       <PageHeader
+        eyebrow="Library"
         title="Documents"
-        description="Every protocol, drug guideline and circular, with its versions, effective dates and review status. Only approved, current versions are ever used in answers."
+        description="Every protocol, drug guideline and circular with its versions and review dates. Only the approved version in force is ever used in answers."
         actions={
           <Button onClick={() => setUploadOpen(true)}>
             <Upload className="h-4 w-4" /> Upload document
@@ -68,8 +70,8 @@ export function DocumentsPage() {
         }
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="relative min-w-56 flex-1">
+      <div className="mb-8 space-y-4">
+        <div className="relative max-w-xl">
           <Search
             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
             aria-hidden
@@ -82,149 +84,114 @@ export function DocumentsPage() {
             className="pl-9"
           />
         </div>
-        <Select
-          aria-label="Document type"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-          className="w-48"
-        >
-          <option value="all">All types</option>
-          {Object.entries(DOC_TYPE_LABEL).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </Select>
-        <div
-          className="flex gap-1 rounded-xl border border-border bg-surface-2 p-1"
-          role="group"
-          aria-label="Filter"
-        >
-          {(
-            [
-              ["all", "All"],
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+          <Segmented
+            label="Status"
+            value={filter}
+            onChange={setFilter}
+            options={[
+              ["all", `All (${String(all.length)})`],
               ["pending", `Awaiting approval (${String(pendingCount)})`],
               ["overdue", `Review overdue (${String(overdueCount)})`],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={filter === value}
-              onClick={() => setFilter(value)}
-              className={clsx(
-                "min-h-9 rounded-lg px-3 text-sm",
-                filter === value ? "bg-surface font-medium shadow-card" : "text-muted hover:text-text",
-              )}
-            >
-              {label}
-            </button>
-          ))}
+            ]}
+          />
+          <Segmented
+            label="Document type"
+            value={type}
+            onChange={setType}
+            options={[["all", "All types"], ...(Object.entries(DOC_TYPE_LABEL) as [DocType, string][])]}
+          />
         </div>
       </div>
 
       {docs.isLoading ? (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-16 w-full" />
+            <Skeleton key={i} className="h-20 w-full" />
           ))}
         </div>
       ) : docs.isError ? (
         <ErrorNotice message={errorMessage(docs.error)} />
       ) : rows.length === 0 ? (
-        <EmptyState icon={<FileStack className="h-8 w-8" />} title="No documents match">
-          Change the filters, or upload a document.
-        </EmptyState>
+        <EmptyState title="No documents match">Change the filters, or upload a document.</EmptyState>
       ) : (
-        <Card className="overflow-hidden">
-          <table className="w-full text-left text-sm">
-            <thead className="hidden border-b border-border bg-surface-2 text-xs uppercase tracking-wide text-muted md:table-header-group">
-              <tr>
-                <th className="px-4 py-2.5 font-medium">Document</th>
-                <th className="px-4 py-2.5 font-medium">In force</th>
-                <th className="px-4 py-2.5 font-medium">Status</th>
-                <th className="px-4 py-2.5 font-medium">Review due</th>
-                <th className="px-4 py-2.5 font-medium">Owner</th>
-                <th className="w-8" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {rows.map((doc) => (
-                <DocumentRow
-                  key={doc.id}
-                  doc={doc}
-                  onOpen={() => void navigate(`/admin/documents/${doc.id}`)}
-                />
-              ))}
-            </tbody>
-          </table>
-        </Card>
+        <div className="border-t border-primary">
+          <div className="mono-label hidden grid-cols-[minmax(0,2.4fr)_1fr_1fr_1fr_1.25rem] gap-6 border-b border-hairline py-3 text-muted lg:grid">
+            <span>Document</span>
+            <span>In force</span>
+            <span>Status</span>
+            <span>Review due</span>
+            <span />
+          </div>
+          <ul className="divide-y divide-hairline border-b border-hairline">
+            {rows.map((doc) => (
+              <DocumentRow key={doc.id} doc={doc} />
+            ))}
+          </ul>
+        </div>
       )}
 
       <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} />
-    </AdminPage>
+    </Page>
   );
 }
 
-function DocumentRow({ doc, onOpen }: { doc: DocumentSummary; onOpen: () => void }) {
-  const current: Version | undefined = doc.versions.find((v) => v.id === doc.current_version_id);
-  const drafts = doc.versions.filter((v) => v.status === "draft");
-  const processing = doc.versions.some((v) => ["pending", "processing"].includes(v.ingest_status));
+function DocumentRow({ doc }: { doc: DocumentSummary }) {
+  const current = doc.versions.find((v) => v.id === doc.current_version_id);
+  const drafts = doc.versions.filter((v) => v.status === "draft").length;
   const days = doc.next_review_due ? daysUntil(doc.next_review_due) : null;
   return (
-    <tr className="cursor-pointer hover:bg-surface-2" onClick={onOpen}>
-      <td className="px-4 py-3">
-        <Link
-          to={`/admin/documents/${doc.id}`}
-          onClick={(e) => e.stopPropagation()}
-          className="font-mono text-sm font-semibold text-accent-text"
-        >
-          {doc.doc_code}
-        </Link>
-        <p className="font-medium text-text">{doc.title}</p>
-        <p className="text-xs text-muted">
-          {DOC_TYPE_LABEL[doc.doc_type]}
-          {doc.department ? ` · ${doc.department.name}` : ""}
-          {doc.applies_to_all_branches
-            ? " · all branches"
-            : ` · ${doc.branches.map((b) => b.name).join(", ")} only`}
-        </p>
-      </td>
-      <td className="px-4 py-3 align-top md:align-middle">
-        {current ? (
-          <span>
-            v{current.version_label}
-            <span className="block text-xs text-muted">since {formatDate(current.effective_from)}</span>
+    <li>
+      <Link
+        to={paths.document(doc.id)}
+        className="group grid gap-x-6 gap-y-3 py-5 text-ink no-underline lg:grid-cols-[minmax(0,2.4fr)_1fr_1fr_1fr_1.25rem] lg:items-center"
+      >
+        <span className="min-w-0">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-sm">{doc.doc_code}</span>
+            <TaxonomyChip>{DOC_TYPE_LABEL[doc.doc_type]}</TaxonomyChip>
           </span>
-        ) : (
-          <span className="text-muted">None yet</span>
-        )}
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex flex-wrap gap-1">
-          {current ? <StatusBadge status="approved" /> : null}
-          {drafts.length ? <Badge tone="accent">{drafts.length} awaiting approval</Badge> : null}
-          {processing ? (
-            <Badge>
-              <Loader2 className="h-3 w-3 animate-spin" aria-hidden /> Processing
-            </Badge>
-          ) : null}
-        </div>
-      </td>
-      <td className="px-4 py-3">
-        {doc.next_review_due ? (
-          <span className={clsx(days !== null && days < 0 && "font-medium text-danger")}>
-            {formatDate(doc.next_review_due)}
-            {days !== null && days < 0 ? <span className="block text-xs">{-days} days overdue</span> : null}
+          <span className="mt-1 block text-lg leading-snug group-hover:underline">{doc.title}</span>
+          <span className="mt-0.5 block text-micro text-muted">
+            {doc.department?.name ?? "No department"} ·{" "}
+            {doc.applies_to_all_branches
+              ? "all branches"
+              : `${doc.branches.map((b) => b.name).join(", ")} only`}
+            {doc.owner ? ` · owner ${doc.owner.display_name}` : ""}
           </span>
-        ) : (
-          <span className="text-muted">—</span>
-        )}
-      </td>
-      <td className="px-4 py-3 text-muted">{doc.owner?.display_name ?? "—"}</td>
-      <td className="pr-3">
-        <ChevronRight className="h-4 w-4 text-muted" aria-hidden />
-      </td>
-    </tr>
+        </span>
+        <span className="text-sm">
+          {current ? (
+            <>
+              v{current.version_label}
+              <span className="block text-micro text-muted">since {formatDate(current.effective_from)}</span>
+            </>
+          ) : (
+            <span className="text-muted">None in force</span>
+          )}
+        </span>
+        <span className="flex flex-wrap gap-1.5">
+          {current ? <Badge tone="success">Approved</Badge> : null}
+          {drafts ? <Badge tone="amber">{drafts} awaiting approval</Badge> : null}
+          {isProcessing(doc) ? <Badge>Processing</Badge> : null}
+        </span>
+        <span className="text-sm">
+          {doc.next_review_due ? (
+            <>
+              {formatDate(doc.next_review_due)}
+              {days !== null && days < 0 ? (
+                <span className="block text-micro text-error">{-days} days overdue</span>
+              ) : null}
+            </>
+          ) : (
+            <span className="text-muted">—</span>
+          )}
+        </span>
+        <ArrowRight
+          className="hidden h-4 w-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink lg:block"
+          aria-hidden
+        />
+      </Link>
+    </li>
   );
 }

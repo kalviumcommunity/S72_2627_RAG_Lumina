@@ -5,7 +5,11 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 const apiTarget = process.env.VITE_API_PROXY ?? "http://127.0.0.1:8001";
-const proxy = { "/api": { target: apiTarget, changeOrigin: false } };
+// /docs is the backend's interactive API documentation (linked from the account menu).
+const proxy = {
+  "/api": { target: apiTarget, changeOrigin: false },
+  "/docs": { target: apiTarget, changeOrigin: false },
+};
 
 export default defineConfig({
   plugins: [
@@ -19,8 +23,8 @@ export default defineConfig({
         name: "Lumina",
         short_name: "Lumina",
         description: "Source-backed answers from approved hospital protocols (synthetic demo corpus).",
-        theme_color: "#0b6e8a",
-        background_color: "#f6f7f9",
+        theme_color: "#000000",
+        background_color: "#ffffff",
         display: "standalone",
         start_url: "/",
         icons: [

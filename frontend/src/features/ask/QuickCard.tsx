@@ -1,6 +1,6 @@
 import type { Citation, QuickValue } from "../../lib/types";
 
-/** Key values (dose / time / threshold) — each one opens the clause it was copied from. */
+/** Key values (dose / time / threshold) on warm stone cards — each opens the clause it came from. */
 export function QuickCard({
   values,
   citations,
@@ -14,8 +14,8 @@ export function QuickCard({
   const byMarker = new Map(citations.map((c) => [c.marker, c]));
   return (
     <section aria-label="Key values">
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Key values</h3>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <h3 className="mono-label mb-2 text-ink">Key values</h3>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {values.map((qv, index) => {
           const citation = byMarker.get(qv.source);
           return (
@@ -24,13 +24,14 @@ export function QuickCard({
               type="button"
               disabled={!citation}
               onClick={() => citation && onOpen(citation.chunk_id)}
-              className="flex min-h-11 flex-col items-start rounded-xl border border-border bg-surface-2 px-3 py-2 text-left hover:border-accent disabled:cursor-default disabled:hover:border-border"
+              className="flex flex-col items-start rounded-sm bg-stone px-4 py-3.5 text-left transition-colors hover:bg-stone-hover disabled:cursor-default disabled:hover:bg-stone"
             >
-              <span className="text-xs text-muted">{qv.label}</span>
-              <span className="flex w-full items-baseline justify-between gap-2">
-                <span className="font-semibold">{qv.value}</span>
+              <span className="text-micro text-muted">{qv.label}</span>
+              <span className="mt-1 flex w-full items-baseline justify-between gap-3">
+                {/* Short values (doses, times) read as figures; long notes drop to body size. */}
+                <span className={qv.value.length > 28 ? "text-base" : "text-feature"}>{qv.value}</span>
                 {citation ? (
-                  <span className="shrink-0 font-mono text-[0.7rem] text-accent-text">
+                  <span className="mono-label shrink-0 text-muted">
                     {qv.source} · {citation.doc_code}
                   </span>
                 ) : null}
