@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { clsx } from "clsx";
-import { ExternalLink, FileText, GitMerge, History, ScanText, TriangleAlert } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { ExternalLink } from "lucide-react";
+import { lazy, Suspense, useEffect, useRef, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -14,18 +14,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/Ta
 import { useToast } from "../../components/ui/Toast";
 import { api, errorMessage } from "../../lib/api";
 import { daysUntil, formatDate, percent, sectionLabel } from "../../lib/format";
+import { queries } from "../../lib/queries";
 import type { Source } from "../../lib/types";
-import { PdfViewer, type HighlightBox } from "./PdfViewer";
+import { DOC_TYPE_LABEL } from "../documents/labels";
+import type { HighlightBox } from "./PdfViewer";
 import { VersionBadge } from "./VersionBadge";
+
+// pdf.js is large and only needed once someone opens "Original page", so it loads on demand.
+const PdfViewer = lazy(() => import("./PdfViewer").then((m) => ({ default: m.PdfViewer })));
 
 /** Opens the cited clause inside its whole document, highlighted and scrolled into view.
  *  Bottom sheet on phones, side panel on desktop. */
 export function SourceSheet({ chunkId, onClose }: { chunkId: string | null; onClose: () => void }) {
-  const source = useQuery({
-    queryKey: ["source", chunkId],
-    queryFn: () => api.get<Source>(`/sources/${chunkId ?? ""}`),
-    enabled: chunkId !== null,
-  });
+  const source = useQuery(queries.source(chunkId));
   const data = source.data;
 
   return (
@@ -34,16 +35,8 @@ export function SourceSheet({ chunkId, onClose }: { chunkId: string | null; onCl
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      title={
-        data ? (
-          <span className="flex items-center gap-2">
-            <FileText className="h-5 w-5 shrink-0 text-accent" aria-hidden />
-            {data.doc_code} {sectionLabel(data.section_path)}
-          </span>
-        ) : (
-          "Source"
-        )
-      }
+      eyebrow={data ? `Source · ${DOC_TYPE_LABEL[data.doc_type]}` : "Source"}
+      title={data ? `${data.doc_code} ${sectionLabel(data.section_path)}` : "Loading source"}
       description={data?.title}
       footer={data ? <OpenOriginal source={data} /> : undefined}
     >
@@ -70,15 +63,14 @@ function SourceBody({ source }: { source: Source }) {
   const isPdf = source.mime_type === "application/pdf";
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-1.5">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-2">
         <VersionBadge
           version={source.version}
           effectiveFrom={source.effective_from}
           status={source.status}
           current={source.is_current}
         />
-        <Badge>{source.doc_type.replace("_", " ")}</Badge>
         {reviewDays !== null ? (
           <Badge tone={reviewDays < 0 ? "danger" : "neutral"}>
             {reviewDays < 0
@@ -88,40 +80,41 @@ function SourceBody({ source }: { source: Source }) {
         ) : null}
         {source.ocr_min_confidence !== null ? (
           <Badge tone={source.ocr_min_confidence < 0.8 ? "amber" : "neutral"}>
-            <ScanText className="h-3 w-3" aria-hidden /> Scanned · OCR {percent(source.ocr_min_confidence)}
+            Scanned · OCR {percent(source.ocr_min_confidence)}
           </Badge>
         ) : null}
       </div>
 
       {source.superseded_by.length ? (
-        <Banner tone="amber" icon={<History className="h-4 w-4" aria-hidden />}>
+        <Notice tone="coral" label="Superseded">
           This clause has been superseded by{" "}
           {source.superseded_by.map((s, i) => (
             <span key={s.version_id}>
               {i > 0 ? ", " : ""}
-              <strong>
+              <strong className="font-medium">
                 {s.doc_code} v{s.version}
               </strong>{" "}
               (effective {formatDate(s.effective_from)})
             </span>
           ))}
           . Lumina never cites superseded text in answers.
-        </Banner>
+        </Notice>
       ) : null}
       {source.newer_version && !source.is_current ? (
-        <Banner tone="amber" icon={<TriangleAlert className="h-4 w-4" aria-hidden />}>
-          A newer version is in force: <strong>v{source.newer_version.version}</strong>, effective{" "}
+        <Notice tone="coral" label="Newer version">
+          A newer version is in force:{" "}
+          <strong className="font-medium">v{source.newer_version.version}</strong>, effective{" "}
           {formatDate(source.newer_version.effective_from)}.
-        </Banner>
+        </Notice>
       ) : null}
       {source.amends.length ? (
-        <Banner tone="accent" icon={<GitMerge className="h-4 w-4" aria-hidden />}>
+        <Notice tone="blue" label="Amendment">
           This document amends{" "}
           {source.amends
             .map((a) => `${a.doc_code}${a.section_path ? ` ${sectionLabel(a.section_path)}` : ""}`)
             .join(", ")}
           .
-        </Banner>
+        </Notice>
       ) : null}
 
       {isPdf ? (
@@ -130,16 +123,18 @@ function SourceBody({ source }: { source: Source }) {
             <TabsTrigger value="text">Clause text</TabsTrigger>
             <TabsTrigger value="pdf">Original page</TabsTrigger>
           </TabsList>
-          <TabsContent value="text" className="mt-3">
+          <TabsContent value="text" className="mt-5">
             <Outline source={source} />
           </TabsContent>
-          <TabsContent value="pdf" className="mt-3">
-            <PdfViewer
-              fileUrl={source.file_url}
-              initialPage={source.page_start}
-              boxes={boxes}
-              clauseText={source.text}
-            />
+          <TabsContent value="pdf" className="mt-5">
+            <Suspense fallback={<Skeleton className="h-[28rem] w-full" />}>
+              <PdfViewer
+                fileUrl={source.file_url}
+                initialPage={source.page_start}
+                boxes={boxes}
+                clauseText={source.text}
+              />
+            </Suspense>
           </TabsContent>
         </Tabs>
       ) : (
@@ -149,23 +144,15 @@ function SourceBody({ source }: { source: Source }) {
   );
 }
 
-function Banner({
-  tone,
-  icon,
-  children,
-}: {
-  tone: "amber" | "accent";
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
+function Notice({ tone, label, children }: { tone: "coral" | "blue"; label: string; children: ReactNode }) {
   return (
     <div
       className={clsx(
-        "flex items-start gap-2 rounded-xl border px-3 py-2 text-sm",
-        tone === "amber" ? "border-amber-border bg-amber-soft" : "border-accent/30 bg-accent-soft",
+        "rounded-sm border px-4 py-3 text-sm",
+        tone === "coral" ? "border-coral-soft bg-coral-wash" : "border-blue/20 bg-blue-wash",
       )}
     >
-      <span className={clsx("mt-0.5", tone === "amber" ? "text-amber" : "text-accent-text")}>{icon}</span>
+      <p className={clsx("mono-label mb-1", tone === "coral" ? "text-coral-ink" : "text-blue")}>{label}</p>
       <p>{children}</p>
     </div>
   );
@@ -192,7 +179,7 @@ function Outline({ source }: { source: Source }) {
         },
       ];
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {items.map((item) => {
         const isCited = item.chunk_id === source.chunk_id;
         return (
@@ -201,16 +188,16 @@ function Outline({ source }: { source: Source }) {
             ref={isCited ? cited : undefined}
             aria-current={isCited ? "true" : undefined}
             className={clsx(
-              "scroll-mt-4 rounded-xl border px-3 py-2",
-              isCited ? "border-highlight-border bg-highlight" : "border-transparent",
+              "scroll-mt-4 rounded-sm px-4 py-3",
+              isCited ? "border-l-4 border-green bg-green-wash" : "border-l-4 border-transparent",
             )}
           >
-            <h4 className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-              <span className="text-accent-text">{sectionLabel(item.section_path)}</span>
-              {item.heading}
-              {isCited ? <Badge tone="amber">Cited clause</Badge> : null}
+            <h4 className="flex flex-wrap items-center gap-2">
+              <span className="mono-label text-muted">{sectionLabel(item.section_path)}</span>
+              <span className="font-medium">{item.heading}</span>
+              {isCited ? <Badge tone="success">Cited clause</Badge> : null}
             </h4>
-            <div className="prose-source">
+            <div className="prose-source mt-1">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{item.text}</ReactMarkdown>
             </div>
           </section>
@@ -233,9 +220,9 @@ function OpenOriginal({ source }: { source: Source }) {
     }
   };
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-xs text-muted">Approved institutional document · synthetic demo corpus</span>
-      <Button size="sm" variant="secondary" onClick={() => void open()}>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <span className="text-micro text-muted">Approved institutional document · synthetic demo corpus</span>
+      <Button size="sm" variant="outline" onClick={() => void open()}>
         <ExternalLink className="h-4 w-4" /> Open original
       </Button>
     </div>

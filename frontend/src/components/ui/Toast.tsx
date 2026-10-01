@@ -42,24 +42,24 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               if (!open) setItems((prev) => prev.filter((t) => t.id !== item.id));
             }}
             className={clsx(
-              "flex items-start gap-3 rounded-2xl border bg-surface p-4 shadow-xl",
-              item.tone === "error" ? "border-danger-border" : "border-border",
+              "flex items-start gap-3 rounded-sm bg-primary p-4 text-white",
+              item.tone === "error" && "border-l-4 border-error",
             )}
           >
             {item.tone === "error" ? (
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-danger" aria-hidden />
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-coral" aria-hidden />
             ) : (
-              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden />
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-wash" aria-hidden />
             )}
             <div className="min-w-0 flex-1">
               <ToastPrimitive.Title className="font-medium">{item.title}</ToastPrimitive.Title>
               {item.description ? (
-                <ToastPrimitive.Description className="mt-0.5 text-sm text-muted">
+                <ToastPrimitive.Description className="mt-0.5 text-sm text-muted-dark">
                   {item.description}
                 </ToastPrimitive.Description>
               ) : null}
             </div>
-            <ToastPrimitive.Close aria-label="Dismiss" className="rounded-lg p-1 hover:bg-surface-2">
+            <ToastPrimitive.Close aria-label="Dismiss" className="rounded-full p-1 hover:bg-white/10">
               <X className="h-4 w-4" />
             </ToastPrimitive.Close>
           </ToastPrimitive.Root>

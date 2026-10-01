@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-ProtoCite requires fast, reliable retrieval over clinical protocols. Search must handle exact drug names, abbreviations (e.g., "aPTT", "TDS", "OD"), and protocol codes (e.g., "P-ICU-07"), as well as semantic similarity for colloquial queries. Operating a separate vector database (e.g., Pinecone, Qdrant, Milvus) alongside an operational database introduces dual-write anomalies, migration overhead, and complex transactional consistency issues.
+Lumina requires fast, reliable retrieval over clinical protocols. Search must handle exact drug names, abbreviations (e.g., "aPTT", "TDS", "OD"), and protocol codes (e.g., "P-ICU-07"), as well as semantic similarity for colloquial queries. Operating a separate vector database (e.g., Pinecone, Qdrant, Milvus) alongside an operational database introduces dual-write anomalies, migration overhead, and complex transactional consistency issues.
 
 ## Decision
 We utilize PostgreSQL 16 as both the transactional datastore and search engine:

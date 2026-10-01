@@ -1,6 +1,336 @@
 {
   "components": {
     "schemas": {
+      "AIConfigOut": {
+        "properties": {
+          "embedding_model": {
+            "title": "Embedding Model",
+            "type": "string"
+          },
+          "llm_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Model"
+          },
+          "llm_provider": {
+            "title": "Llm Provider",
+            "type": "string"
+          },
+          "min_relevance": {
+            "title": "Min Relevance",
+            "type": "number"
+          },
+          "pii_engine": {
+            "title": "Pii Engine",
+            "type": "string"
+          },
+          "prompt_versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Prompt Versions",
+            "type": "object"
+          },
+          "reasoning_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasoning Level"
+          },
+          "reranker_model": {
+            "title": "Reranker Model",
+            "type": "string"
+          },
+          "verifier_mode": {
+            "title": "Verifier Mode",
+            "type": "string"
+          },
+          "verifier_threshold": {
+            "title": "Verifier Threshold",
+            "type": "number"
+          }
+        },
+        "required": [
+          "llm_provider",
+          "llm_model",
+          "reasoning_level",
+          "embedding_model",
+          "reranker_model",
+          "pii_engine",
+          "verifier_mode",
+          "verifier_threshold",
+          "min_relevance",
+          "prompt_versions"
+        ],
+        "title": "AIConfigOut",
+        "type": "object"
+      },
+      "AIDecision": {
+        "description": "One question and how the pipeline handled it (the system's \"reasoning trace\").",
+        "properties": {
+          "abstain_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abstain Reason"
+          },
+          "cited": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Cited",
+            "type": "array"
+          },
+          "claims": {
+            "title": "Claims",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dropped": {
+            "items": {
+              "$ref": "#/components/schemas/DroppedClaim"
+            },
+            "title": "Dropped",
+            "type": "array"
+          },
+          "expansions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Expansions",
+            "type": "array"
+          },
+          "generation_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Mode"
+          },
+          "judge": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Judge"
+          },
+          "key_terms": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Key Terms",
+            "type": "array"
+          },
+          "latency_ms": {
+            "title": "Latency Ms",
+            "type": "integer"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "pii_redacted": {
+            "title": "Pii Redacted",
+            "type": "boolean"
+          },
+          "query_id": {
+            "format": "uuid",
+            "title": "Query Id",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "route": {
+            "title": "Route",
+            "type": "string"
+          },
+          "route_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Reason"
+          },
+          "route_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Source"
+          },
+          "supported": {
+            "title": "Supported",
+            "type": "integer"
+          },
+          "timings_ms": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Timings Ms",
+            "type": "object"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User"
+          }
+        },
+        "required": [
+          "query_id",
+          "created_at",
+          "user",
+          "question",
+          "pii_redacted",
+          "route",
+          "route_reason",
+          "route_source",
+          "outcome",
+          "abstain_reason",
+          "generation_mode",
+          "judge",
+          "claims",
+          "supported",
+          "dropped",
+          "cited",
+          "key_terms",
+          "expansions",
+          "latency_ms",
+          "timings_ms"
+        ],
+        "title": "AIDecision",
+        "type": "object"
+      },
+      "AIUsageOut": {
+        "properties": {
+          "avg_stage_ms": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Avg Stage Ms",
+            "type": "object"
+          },
+          "claims_checked": {
+            "title": "Claims Checked",
+            "type": "integer"
+          },
+          "claims_supported": {
+            "title": "Claims Supported",
+            "type": "integer"
+          },
+          "config": {
+            "$ref": "#/components/schemas/AIConfigOut"
+          },
+          "generation_modes": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Generation Modes",
+            "type": "object"
+          },
+          "judges": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Judges",
+            "type": "object"
+          },
+          "llm_calls": {
+            "items": {
+              "$ref": "#/components/schemas/LLMTaskUsage"
+            },
+            "title": "Llm Calls",
+            "type": "array"
+          },
+          "pii_redacted": {
+            "title": "Pii Redacted",
+            "type": "integer"
+          },
+          "questions": {
+            "title": "Questions",
+            "type": "integer"
+          },
+          "recent": {
+            "items": {
+              "$ref": "#/components/schemas/AIDecision"
+            },
+            "title": "Recent",
+            "type": "array"
+          },
+          "route_sources": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Route Sources",
+            "type": "object"
+          }
+        },
+        "required": [
+          "config",
+          "questions",
+          "pii_redacted",
+          "generation_modes",
+          "route_sources",
+          "judges",
+          "claims_checked",
+          "claims_supported",
+          "avg_stage_ms",
+          "llm_calls",
+          "recent"
+        ],
+        "title": "AIUsageOut",
+        "type": "object"
+      },
       "ActionResult": {
         "properties": {
           "details": {
@@ -24,6 +354,63 @@
           "details"
         ],
         "title": "ActionResult",
+        "type": "object"
+      },
+      "AmendmentRow": {
+        "properties": {
+          "confirmed": {
+            "title": "Confirmed",
+            "type": "boolean"
+          },
+          "effective_from": {
+            "format": "date",
+            "title": "Effective From",
+            "type": "string"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "source_status": {
+            "title": "Source Status",
+            "type": "string"
+          },
+          "suggested": {
+            "title": "Suggested",
+            "type": "boolean"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "source_status",
+          "target",
+          "effective_from",
+          "confirmed",
+          "suggested",
+          "evidence"
+        ],
+        "title": "AmendmentRow",
         "type": "object"
       },
       "AmendsRef": {
@@ -717,6 +1104,63 @@
         "title": "ConflictPatch",
         "type": "object"
       },
+      "ConflictRow": {
+        "properties": {
+          "a": {
+            "title": "A",
+            "type": "string"
+          },
+          "b": {
+            "title": "B",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "detected_by": {
+            "title": "Detected By",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "a",
+          "b",
+          "description",
+          "status",
+          "detected_by",
+          "owner",
+          "created_at"
+        ],
+        "title": "ConflictRow",
+        "type": "object"
+      },
       "ConflictSide": {
         "properties": {
           "chunk_id": {
@@ -1334,6 +1778,137 @@
         "title": "DocumentOut",
         "type": "object"
       },
+      "DocumentRow": {
+        "properties": {
+          "current_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Version"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department"
+          },
+          "doc_code": {
+            "title": "Doc Code",
+            "type": "string"
+          },
+          "doc_type": {
+            "title": "Doc Type",
+            "type": "string"
+          },
+          "drafts": {
+            "title": "Drafts",
+            "type": "integer"
+          },
+          "effective_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective From"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "review_due": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Due"
+          },
+          "review_overdue": {
+            "title": "Review Overdue",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "versions": {
+            "title": "Versions",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "doc_code",
+          "title",
+          "doc_type",
+          "department",
+          "owner",
+          "current_version",
+          "effective_from",
+          "versions",
+          "drafts",
+          "review_due",
+          "review_overdue"
+        ],
+        "title": "DocumentRow",
+        "type": "object"
+      },
+      "DroppedClaim": {
+        "properties": {
+          "claim": {
+            "title": "Claim",
+            "type": "string"
+          },
+          "issue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue"
+          }
+        },
+        "required": [
+          "claim",
+          "issue"
+        ],
+        "title": "DroppedClaim",
+        "type": "object"
+      },
       "EscalationOut": {
         "properties": {
           "clarifying_question": {
@@ -1625,6 +2200,77 @@
         "title": "FeedbackPatch",
         "type": "object"
       },
+      "FeedbackRow": {
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "reporter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reporter"
+          },
+          "routed_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routed To"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "kind",
+          "status",
+          "reporter",
+          "routed_to",
+          "question",
+          "comment"
+        ],
+        "title": "FeedbackRow",
+        "type": "object"
+      },
       "FeedbackStatus": {
         "enum": [
           "open",
@@ -1697,6 +2343,46 @@
         "title": "IngestStatus",
         "type": "string"
       },
+      "LLMTaskUsage": {
+        "properties": {
+          "avg_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Ms"
+          },
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "failures": {
+            "title": "Failures",
+            "type": "integer"
+          },
+          "task": {
+            "title": "Task",
+            "type": "string"
+          },
+          "timeouts": {
+            "title": "Timeouts",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "task",
+          "calls",
+          "failures",
+          "timeouts",
+          "avg_ms"
+        ],
+        "title": "LLMTaskUsage",
+        "type": "object"
+      },
       "OutlineItem": {
         "properties": {
           "chunk_id": {
@@ -1734,6 +2420,63 @@
           "page_start"
         ],
         "title": "OutlineItem",
+        "type": "object"
+      },
+      "OverviewOut": {
+        "properties": {
+          "ai": {
+            "$ref": "#/components/schemas/AIUsageOut"
+          },
+          "amendments": {
+            "items": {
+              "$ref": "#/components/schemas/AmendmentRow"
+            },
+            "title": "Amendments",
+            "type": "array"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/ConflictRow"
+            },
+            "title": "Conflicts",
+            "type": "array"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentRow"
+            },
+            "title": "Documents",
+            "type": "array"
+          },
+          "feedback": {
+            "items": {
+              "$ref": "#/components/schemas/FeedbackRow"
+            },
+            "title": "Feedback",
+            "type": "array"
+          },
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/UserUsage"
+            },
+            "title": "Users",
+            "type": "array"
+          },
+          "window_days": {
+            "title": "Window Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "window_days",
+          "ai",
+          "users",
+          "documents",
+          "amendments",
+          "conflicts",
+          "feedback"
+        ],
+        "title": "OverviewOut",
         "type": "object"
       },
       "QueryRequest": {
@@ -2842,6 +3585,105 @@
         "title": "UserOut",
         "type": "object"
       },
+      "UserUsage": {
+        "properties": {
+          "abstained": {
+            "title": "Abstained",
+            "type": "integer"
+          },
+          "answered": {
+            "title": "Answered",
+            "type": "integer"
+          },
+          "approvals": {
+            "title": "Approvals",
+            "type": "integer"
+          },
+          "branch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Branch"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "feedback_given": {
+            "title": "Feedback Given",
+            "type": "integer"
+          },
+          "last_active": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Active"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "partial": {
+            "title": "Partial",
+            "type": "integer"
+          },
+          "questions": {
+            "title": "Questions",
+            "type": "integer"
+          },
+          "refused_high_risk": {
+            "title": "Refused High Risk",
+            "type": "integer"
+          },
+          "reviews": {
+            "title": "Reviews",
+            "type": "integer"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "uploads": {
+            "title": "Uploads",
+            "type": "integer"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "email",
+          "role",
+          "branch",
+          "questions",
+          "answered",
+          "partial",
+          "abstained",
+          "refused_high_risk",
+          "feedback_given",
+          "uploads",
+          "approvals",
+          "reviews",
+          "last_active"
+        ],
+        "title": "UserUsage",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -3317,6 +4159,65 @@
           }
         },
         "summary": "Audit Verify",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/overview": {
+      "get": {
+        "operationId": "overview_api_v1_admin_overview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "title": "Days",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Overview",
         "tags": [
           "admin"
         ]

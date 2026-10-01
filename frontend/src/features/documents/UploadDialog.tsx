@@ -11,8 +11,10 @@ import { Dialog } from "../../components/ui/Dialog";
 import { ErrorNotice } from "../../components/ui/EmptyState";
 import { Field, Input, Select, Textarea } from "../../components/ui/Field";
 import { useToast } from "../../components/ui/Toast";
+import { paths } from "../../app/paths";
 import { api, ApiError, errorMessage } from "../../lib/api";
-import type { DocType, ExtractedMetadata, ReferenceData, UploadResult } from "../../lib/types";
+import { queries, queryKeys } from "../../lib/queries";
+import type { DocType, ExtractedMetadata, UploadResult } from "../../lib/types";
 import { DOC_TYPE_LABEL } from "./labels";
 
 const ACCEPT = ".md,.markdown,.txt,.pdf,.docx,.html,.htm";
@@ -71,7 +73,7 @@ export function UploadDialog({
       onOpenChange={onOpenChange}
       wide
       title={preset ? `Upload a new version of ${preset.doc_code}` : "Upload a document"}
-      description="Accepted: Markdown, PDF (scanned pages are OCR'd), Word (.docx) or HTML. The upload stays a draft — clinicians never see it until it is approved."
+      description="Markdown, PDF (scanned pages are read with OCR), Word or HTML. It stays a draft — clinicians never see it until an approver approves it."
     >
       {/* The dialog content unmounts when closed, so every opening starts with a fresh form. */}
       <UploadForm preset={preset} onClose={() => onOpenChange(false)} />
@@ -85,11 +87,7 @@ function UploadForm({ preset, onClose }: { preset?: UploadPreset; onClose: () =>
   const { notify } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
-  const reference = useQuery({
-    queryKey: ["reference-data"],
-    queryFn: () => api.get<ReferenceData>("/admin/reference-data"),
-    staleTime: 5 * 60_000,
-  });
+  const reference = useQuery(queries.referenceData());
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -158,11 +156,11 @@ function UploadForm({ preset, onClose }: { preset?: UploadPreset; onClose: () =>
       return api.postForm<UploadResult>("/documents", data);
     },
     onSuccess: (result) => {
-      void queryClient.invalidateQueries({ queryKey: ["documents"] });
-      void queryClient.invalidateQueries({ queryKey: ["document", result.document_id] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.documents });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.document(result.document_id) });
       notify("Uploaded — processing now", { description: "It stays a draft until an approver approves it." });
       onClose();
-      void navigate(`/admin/documents/${result.document_id}`);
+      void navigate(paths.document(result.document_id));
     },
   });
 
@@ -174,7 +172,7 @@ function UploadForm({ preset, onClose }: { preset?: UploadPreset; onClose: () =>
 
   return (
     <form
-      className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+      className="grid grid-cols-1 gap-5 sm:grid-cols-2"
       onSubmit={(e) => {
         if (!file) {
           e.preventDefault();
@@ -193,14 +191,14 @@ function UploadForm({ preset, onClose }: { preset?: UploadPreset; onClose: () =>
                 {...props}
                 type="file"
                 accept={ACCEPT}
-                className="flex-1 py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-accent-soft file:px-3 file:py-1.5 file:text-accent-text"
+                className="flex-1 py-2 file:mr-3 file:rounded-pill file:border-0 file:bg-stone file:px-4 file:py-1.5 file:text-sm file:text-ink"
                 onChange={(e) => {
                   setFile(e.target.files?.[0] ?? null);
                   setFileError(null);
                 }}
               />
               <Button
-                variant="secondary"
+                variant="outline"
                 disabled={!file}
                 loading={extract.isPending}
                 onClick={() => file && extract.mutate(file)}
@@ -253,12 +251,12 @@ function UploadForm({ preset, onClose }: { preset?: UploadPreset; onClose: () =>
       </Field>
       {!preset ? (
         <fieldset className="sm:col-span-2">
-          <legend className="mb-1.5 text-sm font-medium">Applies to</legend>
+          <legend className="mb-2 text-sm font-medium">Applies to</legend>
           <label className="flex min-h-11 items-center gap-2">
             <input
               type="checkbox"
               {...register("applies_to_all_branches")}
-              className="h-4 w-4 accent-[var(--accent)]"
+              className="h-4 w-4 accent-black"
             />
             All branches (network-wide)
           </label>
@@ -270,7 +268,7 @@ function UploadForm({ preset, onClose }: { preset?: UploadPreset; onClose: () =>
                     type="checkbox"
                     value={b.code}
                     {...register("branch_codes")}
-                    className="h-4 w-4 accent-[var(--accent)]"
+                    className="h-4 w-4 accent-black"
                   />
                   {b.name}
                 </label>
@@ -278,7 +276,7 @@ function UploadForm({ preset, onClose }: { preset?: UploadPreset; onClose: () =>
             </div>
           ) : null}
           {formState.errors.branch_codes ? (
-            <p className="text-sm text-danger">{formState.errors.branch_codes.message}</p>
+            <p className="text-sm text-error">{formState.errors.branch_codes.message}</p>
           ) : null}
         </fieldset>
       ) : null}
@@ -292,8 +290,8 @@ function UploadForm({ preset, onClose }: { preset?: UploadPreset; onClose: () =>
           <ErrorNotice title="Upload rejected" message={serverError} />
         </div>
       ) : null}
-      <div className="flex justify-end gap-2 sm:col-span-2">
-        <Button variant="secondary" onClick={onClose}>
+      <div className="flex items-center justify-end gap-4 border-t border-hairline pt-5 sm:col-span-2">
+        <Button variant="link" onClick={onClose}>
           Cancel
         </Button>
         <Button type="submit" loading={upload.isPending}>

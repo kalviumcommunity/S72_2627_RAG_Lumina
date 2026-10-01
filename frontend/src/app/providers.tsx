@@ -12,8 +12,9 @@ import {
 } from "react";
 
 import { ToastProvider } from "../components/ui/Toast";
-import { api, ApiError } from "../lib/api";
+import { API_BASE, api, ApiError } from "../lib/api";
 import { auth, type Session } from "../lib/auth";
+import { queries } from "../lib/queries";
 import type { AuthConfig, TokenResponse } from "../lib/types";
 
 const queryClient = new QueryClient({
@@ -68,14 +69,27 @@ function useSessionKeepAlive(session: Session | null) {
   }, [session]);
 }
 
+/** Hospital SSO: the API redirects to /auth/callback#token=… after OIDC sign-in. The fragment never
+ *  reaches a server log; exchange the token for a full session and drop it from the address bar. */
+export async function completeSsoSignIn(): Promise<TokenResponse | null> {
+  const match = /[#&]token=([^&]+)/.exec(window.location.hash);
+  if (!match?.[1]) return null;
+  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  try {
+    const response = await fetch(`${API_BASE}/auth/refresh`, {
+      method: "POST",
+      headers: { Accept: "application/json", Authorization: `Bearer ${decodeURIComponent(match[1])}` },
+    });
+    return response.ok ? ((await response.json()) as TokenResponse) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(() => auth.get());
   const [lastExit, setLastExit] = useState<"expired" | "signed_out" | null>(null);
-  const config = useQuery({
-    queryKey: ["auth-config"],
-    queryFn: () => api.get<AuthConfig>("/auth/config"),
-    staleTime: 5 * 60_000,
-  });
+  const config = useQuery(queries.authConfig());
 
   useEffect(
     () =>
@@ -89,6 +103,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
   useSessionKeepAlive(session);
+  useEffect(() => {
+    void completeSsoSignIn().then((response) => {
+      if (response) auth.set(response);
+    });
+  }, []);
 
   const devLogin = useCallback(async (email: string) => {
     const response = await api.post<TokenResponse>("/auth/dev-login", { email });
@@ -110,74 +129,14 @@ export function useAuth(): AuthState {
   return ctx;
 }
 
-// ---- theme ---------------------------------------------------------------------------------------
-
-export type ThemePreference = "light" | "dark" | "system";
-const THEME_KEY = "protocite.theme";
-
-interface ThemeState {
-  preference: ThemePreference;
-  resolved: "light" | "dark";
-  setPreference: (p: ThemePreference) => void;
-}
-
-const ThemeContext = createContext<ThemeState | null>(null);
-
-function readPreference(): ThemePreference {
-  try {
-    const v = localStorage.getItem(THEME_KEY);
-    return v === "light" || v === "dark" || v === "system" ? v : "system";
-  } catch {
-    return "system";
-  }
-}
-
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [preference, setPreferenceState] = useState<ThemePreference>(readPreference);
-  const [systemDark, setSystemDark] = useState(
-    () => window.matchMedia("(prefers-color-scheme: dark)").matches,
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  const resolved = preference === "system" ? (systemDark ? "dark" : "light") : preference;
-  useEffect(() => {
-    document.documentElement.dataset.theme = resolved;
-  }, [resolved]);
-  const setPreference = useCallback((p: ThemePreference) => {
-    setPreferenceState(p);
-    try {
-      localStorage.setItem(THEME_KEY, p);
-    } catch {
-      /* storage unavailable: preference lasts for this page only */
-    }
-  }, []);
-  const value = useMemo(
-    () => ({ preference, resolved, setPreference }),
-    [preference, resolved, setPreference],
-  );
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-}
-
-export function useTheme(): ThemeState {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme outside ThemeProvider");
-  return ctx;
-}
-
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <ToastProvider>
-          <TooltipPrimitive.Provider delayDuration={300}>
-            <AuthProvider>{children}</AuthProvider>
-          </TooltipPrimitive.Provider>
-        </ToastProvider>
-      </ThemeProvider>
+      <ToastProvider>
+        <TooltipPrimitive.Provider delayDuration={300}>
+          <AuthProvider>{children}</AuthProvider>
+        </TooltipPrimitive.Provider>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }

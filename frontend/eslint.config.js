@@ -20,7 +20,7 @@ export default tseslint.config(
       // Context hooks live next to their providers; editing those files triggers a full reload.
       "react-refresh/only-export-components": [
         "warn",
-        { allowConstantExport: true, allowExportNames: ["useAuth", "useTheme", "useToast"] },
+        { allowConstantExport: true, allowExportNames: ["useAuth", "useToast", "completeSsoSignIn", "buttonClass"] },
       ],
       "@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true }],
       "@typescript-eslint/no-confusing-void-expression": "off",

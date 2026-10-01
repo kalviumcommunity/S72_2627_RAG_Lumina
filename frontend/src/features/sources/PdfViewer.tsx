@@ -10,7 +10,8 @@ import { Document, Page, pdfjs } from "react-pdf";
 import { Button } from "../../components/ui/Button";
 import { ErrorNotice } from "../../components/ui/EmptyState";
 import { Skeleton } from "../../components/ui/Skeleton";
-import { api, errorMessage } from "../../lib/api";
+import { errorMessage } from "../../lib/api";
+import { queries } from "../../lib/queries";
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
@@ -41,11 +42,7 @@ export function PdfViewer({
   clauseText: string;
 }) {
   const path = fileUrl.replace(/^\/api\/v1/, "");
-  const file = useQuery({
-    queryKey: ["source-file", path],
-    queryFn: () => api.blob(path),
-    staleTime: Infinity,
-  });
+  const file = useQuery(queries.sourceFile(path));
   const container = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(600);
   const [pages, setPages] = useState(1);
@@ -88,7 +85,7 @@ export function PdfViewer({
           loading={<Skeleton className="aspect-[1/1.41] w-full" />}
           error={<ErrorNotice title="Could not render the PDF" message="The file may be damaged." />}
         >
-          <div className="relative overflow-hidden rounded-xl border border-border bg-white shadow-card">
+          <div className="relative overflow-hidden rounded-sm border border-hairline bg-white">
             <Page
               pageNumber={page}
               width={width}
@@ -101,7 +98,7 @@ export function PdfViewer({
                 <div
                   key={i}
                   aria-hidden
-                  className="pointer-events-none absolute rounded-md border-2 border-highlight-border bg-[rgb(255_214_10/0.28)]"
+                  className="pointer-events-none absolute rounded-xs border-2 border-green bg-green/15"
                   style={{
                     left: `${String(b.x0 * 100)}%`,
                     top: `${String(b.y0 * 100)}%`,
@@ -116,22 +113,22 @@ export function PdfViewer({
         <Skeleton className="aspect-[1/1.41] w-full" />
       )}
       {pages > 1 ? (
-        <div className="mt-2 flex items-center justify-center gap-2 text-sm">
+        <div className="mt-3 flex items-center justify-center gap-3 text-sm">
           <Button
             size="icon"
-            variant="secondary"
+            variant="outline"
             aria-label="Previous page"
             disabled={page <= 1}
             onClick={() => setPage(page - 1)}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span>
+          <span className="mono-label text-ink">
             Page {page} of {pages}
           </span>
           <Button
             size="icon"
-            variant="secondary"
+            variant="outline"
             aria-label="Next page"
             disabled={page >= pages}
             onClick={() => setPage(page + 1)}

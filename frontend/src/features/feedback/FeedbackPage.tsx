@@ -1,19 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { clsx } from "clsx";
-import { CheckCircle2, Eye, Inbox } from "lucide-react";
-import { useState } from "react";
+import { Check, Eye, Inbox } from "lucide-react";
+import { useState, type ReactNode } from "react";
 
-import { AdminPage, PageHeader } from "../../app/layout/AppShell";
+import { Page, PageHeader } from "../../app/layout/Page";
 import { Badge, type Tone } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Dialog } from "../../components/ui/Dialog";
 import { EmptyState, ErrorNotice } from "../../components/ui/EmptyState";
 import { Field, Textarea } from "../../components/ui/Field";
+import { Segmented } from "../../components/ui/Segmented";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { useToast } from "../../components/ui/Toast";
 import { api, errorMessage } from "../../lib/api";
 import { relativeTime } from "../../lib/format";
+import { queries, queryKeys } from "../../lib/queries";
 import type { Feedback, FeedbackKind } from "../../lib/types";
 
 type Status = Feedback["status"];
@@ -30,33 +31,24 @@ const STATUS_TONE: Record<Status, Tone> = { open: "accent", acknowledged: "amber
 export function FeedbackPage() {
   const [includeResolved, setIncludeResolved] = useState(false);
   const [acting, setActing] = useState<{ item: Feedback; status: Status } | null>(null);
-  const inbox = useQuery({
-    queryKey: ["feedback-inbox", includeResolved],
-    queryFn: () => api.get<Feedback[]>("/feedback/inbox", { include_resolved: includeResolved }),
-  });
+  const inbox = useQuery(queries.feedback(includeResolved));
 
   return (
-    <AdminPage>
+    <Page title="Feedback">
       <PageHeader
+        eyebrow="Review"
         title="Feedback"
         description="When a clinician flags an answer, the report comes to the owner of the cited document with the question, the answer and the clauses it cited."
         actions={
-          <div className="flex gap-1 rounded-xl border border-border bg-surface-2 p-1">
-            {([false, true] as const).map((value) => (
-              <button
-                key={String(value)}
-                type="button"
-                aria-pressed={includeResolved === value}
-                onClick={() => setIncludeResolved(value)}
-                className={clsx(
-                  "min-h-9 rounded-lg px-3 text-sm",
-                  includeResolved === value ? "bg-surface font-medium shadow-card" : "text-muted",
-                )}
-              >
-                {value ? "All" : "Open"}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            label="Show"
+            value={includeResolved}
+            onChange={setIncludeResolved}
+            options={[
+              [false, "Open"],
+              [true, "All"],
+            ]}
+          />
         }
       />
       {inbox.isLoading ? (
@@ -64,85 +56,89 @@ export function FeedbackPage() {
       ) : inbox.isError ? (
         <ErrorNotice message={errorMessage(inbox.error)} />
       ) : !inbox.data?.length ? (
-        <EmptyState icon={<Inbox className="h-8 w-8" />} title="Inbox is clear">
+        <EmptyState icon={<Inbox className="h-6 w-6" />} title="Inbox is clear">
           No reports need your attention.
         </EmptyState>
       ) : (
-        <div className="space-y-4">
+        <ul className="space-y-6">
           {inbox.data.map((fb) => (
-            <Card key={fb.id} className="p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge tone={KIND[fb.kind].tone}>{KIND[fb.kind].label}</Badge>
-                  <Badge tone={STATUS_TONE[fb.status]}>{fb.status}</Badge>
-                  <span className="text-sm text-muted">
-                    {fb.reporter ?? "A clinician"} · {relativeTime(fb.created_at)}
-                    {fb.routed_to ? ` · routed to ${fb.routed_to}` : ""}
-                  </span>
-                </div>
-                {fb.status !== "resolved" ? (
-                  <div className="flex gap-2">
-                    {fb.status === "open" ? (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setActing({ item: fb, status: "acknowledged" })}
-                      >
-                        <Eye className="h-4 w-4" /> Acknowledge
-                      </Button>
-                    ) : null}
-                    <Button size="sm" onClick={() => setActing({ item: fb, status: "resolved" })}>
-                      <CheckCircle2 className="h-4 w-4" /> Resolve
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-              <dl className="mt-3 space-y-2 text-sm">
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
-                    Question (identifiers removed)
-                  </dt>
-                  <dd className="mt-0.5 font-medium">{fb.question}</dd>
-                </div>
-                {fb.answer ? (
-                  <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
-                      Answer given ({fb.outcome})
-                    </dt>
-                    <dd className="mt-0.5 line-clamp-4 whitespace-pre-line text-muted">{fb.answer}</dd>
-                  </div>
-                ) : null}
-                {fb.comment ? (
-                  <div className="rounded-xl border border-border bg-surface-2 p-3">
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
-                      Clinician's comment
-                    </dt>
-                    <dd className="mt-0.5">{fb.comment}</dd>
-                  </div>
-                ) : null}
-                {fb.cited.length ? (
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <dt className="text-xs text-muted">Cited:</dt>
-                    {fb.cited.map((c) => (
-                      <dd key={c}>
-                        <Badge>{c}</Badge>
-                      </dd>
-                    ))}
-                  </div>
-                ) : null}
-                {fb.resolution_note ? (
-                  <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Owner's note</dt>
-                    <dd className="mt-0.5">{fb.resolution_note}</dd>
-                  </div>
-                ) : null}
-              </dl>
-            </Card>
+            <li key={fb.id}>
+              <FeedbackCard item={fb} onAct={(status) => setActing({ item: fb, status })} />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
       {acting ? <NoteDialog key={acting.item.id} {...acting} onClose={() => setActing(null)} /> : null}
-    </AdminPage>
+    </Page>
+  );
+}
+
+function Entry({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <dt className="mono-label text-muted">{label}</dt>
+      <dd className="mt-1">{children}</dd>
+    </div>
+  );
+}
+
+function FeedbackCard({ item: fb, onAct }: { item: Feedback; onAct: (status: Status) => void }) {
+  return (
+    <Card className="p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge tone={KIND[fb.kind].tone}>{KIND[fb.kind].label}</Badge>
+          <Badge tone={STATUS_TONE[fb.status]}>{fb.status}</Badge>
+          <span className="text-caption text-muted">
+            {fb.reporter ?? "A clinician"} · {relativeTime(fb.created_at)}
+            {fb.routed_to ? ` · routed to ${fb.routed_to}` : ""}
+          </span>
+        </div>
+        {fb.status !== "resolved" ? (
+          <div className="flex items-center gap-3">
+            {fb.status === "open" ? (
+              <Button size="sm" variant="outline" onClick={() => onAct("acknowledged")}>
+                <Eye className="h-4 w-4" /> Acknowledge
+              </Button>
+            ) : null}
+            <Button size="sm" onClick={() => onAct("resolved")}>
+              <Check className="h-4 w-4" /> Resolve
+            </Button>
+          </div>
+        ) : null}
+      </div>
+      <dl className="mt-6 space-y-5 text-sm">
+        <Entry label="Question (identifiers removed)">
+          <span className="text-feature">{fb.question}</span>
+        </Entry>
+        {fb.answer ? (
+          <Entry label={`Answer given (${fb.outcome})`}>
+            <span className="line-clamp-4 whitespace-pre-line text-muted">{fb.answer}</span>
+          </Entry>
+        ) : null}
+        {fb.comment ? (
+          <div className="rounded-sm bg-stone p-4">
+            <dt className="mono-label text-muted">Clinician's comment</dt>
+            <dd className="mt-1">{fb.comment}</dd>
+          </div>
+        ) : null}
+        {fb.cited.length ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <dt className="mono-label text-muted">Cited</dt>
+            {fb.cited.map((c) => (
+              <dd key={c}>
+                <Badge>{c}</Badge>
+              </dd>
+            ))}
+          </div>
+        ) : null}
+        {fb.resolution_note ? (
+          <div className="border-t border-hairline pt-4">
+            <Entry label="Owner's note">{fb.resolution_note}</Entry>
+          </div>
+        ) : null}
+      </dl>
+    </Card>
   );
 }
 
@@ -155,8 +151,9 @@ function NoteDialog({ item, status, onClose }: { item: Feedback; status: Status;
       api.patch<Feedback>(`/feedback/${item.id}`, { status, resolution_note: note.trim() || null }),
     onSuccess: () => {
       notify(status === "resolved" ? "Feedback resolved" : "Feedback acknowledged");
-      void queryClient.invalidateQueries({ queryKey: ["feedback-inbox"] });
-      void queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.feedback });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.stats });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.overview });
       onClose();
     },
   });
@@ -174,7 +171,7 @@ function NoteDialog({ item, status, onClose }: { item: Feedback; status: Status;
       }
     >
       <form
-        className="space-y-3"
+        className="space-y-5"
         onSubmit={(e) => {
           e.preventDefault();
           save.mutate();
@@ -192,8 +189,8 @@ function NoteDialog({ item, status, onClose }: { item: Feedback; status: Status;
           )}
         </Field>
         {save.error ? <ErrorNotice message={errorMessage(save.error)} /> : null}
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>
+        <div className="flex items-center justify-end gap-4">
+          <Button variant="link" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit" loading={save.isPending} disabled={status === "resolved" && !note.trim()}>

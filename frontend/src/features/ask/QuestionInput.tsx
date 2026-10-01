@@ -1,7 +1,5 @@
-import { SendHorizontal, Square } from "lucide-react";
+import { ArrowUp, Square } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-
-import { Button } from "../../components/ui/Button";
 
 export interface QuestionInputHandle {
   focus: () => void;
@@ -9,7 +7,7 @@ export interface QuestionInputHandle {
 
 const MAX = 1000;
 
-/** Large input pinned to the bottom of the screen (one-handed use on a phone). */
+/** Composer pinned to the bottom of the screen (one-handed use on a phone). Enter sends. */
 export const QuestionInput = forwardRef<
   QuestionInputHandle,
   { value: string; onChange: (v: string) => void; onSubmit: () => void; onCancel: () => void; busy: boolean }
@@ -26,15 +24,14 @@ export const QuestionInput = forwardRef<
     const el = area.current;
     if (!el) return;
     el.style.height = "auto";
-    // scrollHeight excludes the border; without it the box is 2px short and shows a scrollbar.
-    const needed = el.scrollHeight + el.offsetHeight - el.clientHeight;
+    const needed = el.scrollHeight;
     el.style.height = `${String(Math.min(needed, 160))}px`;
     el.style.overflowY = needed > 160 ? "auto" : "hidden";
   }, [value]);
 
   return (
     <form
-      className="flex items-end gap-2"
+      className="flex items-end gap-2 rounded-md border border-hairline bg-canvas p-2 pl-4 transition-colors focus-within:border-primary"
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit();
@@ -57,30 +54,29 @@ export const QuestionInput = forwardRef<
           }
         }}
         placeholder="Ask about a protocol, drug guideline or circular…"
-        className="max-h-40 min-h-12 flex-1 resize-none rounded-2xl border border-border-strong bg-surface px-4 py-3 text-base shadow-card placeholder:text-muted focus:border-accent focus:outline-none"
+        className="max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-base text-ink placeholder:text-muted focus:outline-none"
         aria-describedby="question-hint"
       />
       {busy ? (
-        <Button
+        <button
           type="button"
-          variant="secondary"
-          size="icon"
           onClick={onCancel}
           aria-label="Stop"
-          className="h-12 w-12 rounded-2xl"
+          className="inline-flex min-h-10 items-center gap-2 rounded-pill border border-primary px-4 text-sm font-medium hover:bg-primary hover:text-white"
         >
-          <Square className="h-4 w-4" />
-        </Button>
+          <Square className="h-3.5 w-3.5" aria-hidden />
+          <span className="hidden sm:inline">Stop</span>
+        </button>
       ) : (
-        <Button
+        <button
           type="submit"
-          size="icon"
           disabled={!value.trim()}
           aria-label="Ask"
-          className="h-12 w-12 rounded-2xl"
+          className="inline-flex min-h-10 items-center gap-2 rounded-pill bg-primary px-5 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-30"
         >
-          <SendHorizontal className="h-5 w-5" />
-        </Button>
+          <span className="hidden sm:inline">Ask</span>
+          <ArrowUp className="h-4 w-4" aria-hidden />
+        </button>
       )}
     </form>
   );

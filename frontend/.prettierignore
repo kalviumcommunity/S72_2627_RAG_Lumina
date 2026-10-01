@@ -1,0 +1,6 @@
+# Generated files: written by tools, never reformatted by hand.
+src/lib/openapi.json
+dist/
+coverage/
+playwright-report/
+test-results/

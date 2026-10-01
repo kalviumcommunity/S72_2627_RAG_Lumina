@@ -28,8 +28,17 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
+    # Interactive API documentation (linked from the account menu).
+    location /docs {
+        proxy_pass http://api:8000/docs;
+        proxy_set_header Host $host;
+    }
+
     location /api/ {
         proxy_pass http://api:8000/api/;
+        # Answers stream as server-sent events: pass them through as they arrive.
+        proxy_buffering off;
+        proxy_read_timeout 120s;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

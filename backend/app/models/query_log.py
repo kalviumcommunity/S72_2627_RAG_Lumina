@@ -25,6 +25,9 @@ class QueryLog(UUIDPrimaryKey, Timestamps, Base):
     model_id: Mapped[str | None] = mapped_column(String(120))
     prompt_version: Mapped[str | None] = mapped_column(String(120))
     retrieval: Mapped[list[Any] | None] = mapped_column(JSONB)
+    # How the question was handled, for the admin "AI usage" view: route reason and the layer that
+    # decided it (rules / llm), per-stage timings, abbreviation expansions and key terms.
+    trace: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
     answer: Mapped[AnswerLog | None] = relationship(back_populates="query", lazy="selectin", uselist=False)
 

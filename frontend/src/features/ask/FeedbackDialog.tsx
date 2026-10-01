@@ -35,7 +35,7 @@ export function FeedbackButtons({ queryId }: { queryId: string }) {
   const [sent, setSent] = useState<FeedbackKind | null>(null);
   const send = useSendFeedback(queryId);
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-2">
       <Button
         size="icon"
         variant="ghost"
@@ -43,17 +43,11 @@ export function FeedbackButtons({ queryId }: { queryId: string }) {
         aria-pressed={sent === "helpful"}
         disabled={sent !== null}
         onClick={() => send.mutate({ kind: "helpful" }, { onSuccess: () => setSent("helpful") })}
-        className={clsx(sent === "helpful" && "text-success")}
+        className={clsx("rounded-full", sent === "helpful" && "bg-green-wash text-green")}
       >
         <ThumbsUp className="h-4 w-4" />
       </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        disabled={sent !== null}
-        onClick={() => setOpen(true)}
-        className={clsx(sent && sent !== "helpful" && "text-danger")}
-      >
+      <Button size="sm" variant="outline" disabled={sent !== null} onClick={() => setOpen(true)}>
         <ThumbsDown className="h-4 w-4" />
         {sent && sent !== "helpful" ? "Reported" : "Report a problem"}
       </Button>
@@ -105,14 +99,14 @@ export function FeedbackDialog({
         }}
       >
         <fieldset>
-          <legend className="mb-2 text-sm font-medium">What is wrong?</legend>
+          <legend className="mono-label mb-3 text-ink">What is wrong?</legend>
           <div className="grid gap-2">
             {PROBLEMS.map((p) => (
               <label
                 key={p.value}
                 className={clsx(
-                  "flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border px-3 py-2",
-                  kind === p.value ? "border-accent bg-accent-soft" : "border-border hover:bg-surface-2",
+                  "flex min-h-11 cursor-pointer items-start gap-3 rounded-sm border px-4 py-3 transition-colors",
+                  kind === p.value ? "border-primary bg-stone" : "border-hairline hover:border-primary",
                 )}
               >
                 <input
@@ -121,11 +115,11 @@ export function FeedbackDialog({
                   value={p.value}
                   checked={kind === p.value}
                   onChange={() => setKind(p.value)}
-                  className="mt-1 accent-[var(--accent)]"
+                  className="mt-1 accent-black"
                 />
                 <span>
                   <span className="block font-medium">{p.label}</span>
-                  <span className="block text-sm text-muted">{p.hint}</span>
+                  <span className="block text-caption text-muted">{p.hint}</span>
                 </span>
               </label>
             ))}
@@ -142,8 +136,8 @@ export function FeedbackDialog({
             />
           )}
         </Field>
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => onOpenChange(false)}>
+        <div className="flex items-center justify-end gap-4">
+          <Button variant="link" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button type="submit" loading={pending}>

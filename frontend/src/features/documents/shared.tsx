@@ -2,9 +2,9 @@ import { Badge, type Tone } from "../../components/ui/Badge";
 import type { VersionStatus } from "../../lib/types";
 
 const STATUS: Record<VersionStatus, { label: string; tone: Tone }> = {
-  draft: { label: "Draft", tone: "accent" },
+  draft: { label: "Draft", tone: "amber" },
   approved: { label: "Approved", tone: "success" },
-  superseded: { label: "Superseded", tone: "amber" },
+  superseded: { label: "Superseded", tone: "neutral" },
   retired: { label: "Retired", tone: "danger" },
 };
 

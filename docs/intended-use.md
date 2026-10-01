@@ -1,8 +1,8 @@
-# Intended Use Statement & Regulatory Considerations — ProtoCite
+# Intended Use Statement & Regulatory Considerations — Lumina
 
 ## 1. Intended Use Statement
 
-> **"ProtoCite retrieves and displays approved institutional documents. It does not provide diagnoses or patient-specific treatment or dosing recommendations. It supports, and does not replace, clinical judgement and institutional escalation."**
+> **"Lumina retrieves and displays approved institutional documents. It does not provide diagnoses or patient-specific treatment or dosing recommendations. It supports, and does not replace, clinical judgement and institutional escalation."**
 
 This statement is mandatory and must be displayed prominently across all interfaces:
 - In the persistent footer of the web application.
@@ -37,5 +37,5 @@ This statement is mandatory and must be displayed prominently across all interfa
 
 Under India's **Central Drugs Standard Control Organisation (CDSCO)** Medical Device Rules (2017) and Software as a Medical Device (SaMD) guidance:
 - **Software Type:** Non-diagnostic administrative reference and retrieval tool.
-- **Classification:** Because ProtoCite does not perform automated patient-specific diagnosis, triage scoring, or closed-loop dosing calculations, version 1.0 operates outside the definition of an active medical device.
+- **Classification:** Because Lumina does not perform automated patient-specific diagnosis, triage scoring, or closed-loop dosing calculations, version 1.0 operates outside the definition of an active medical device.
 - **Prerequisite for Future Expansion:** Any prospective evolution that accepts individual patient parameters (e.g., patient weight, creatinine clearance, lab values) to recommend automated therapy modifications must undergo clinical validation and formal CDSCO medical device classification review prior to deployment.

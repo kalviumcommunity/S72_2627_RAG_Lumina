@@ -89,8 +89,12 @@ async def ask_stream_get(
 
 @router.get("/history", response_model=list[HistoryItem])
 async def history(user: CurrentUser, session: DbSession, limit: int = 20) -> list[HistoryItem]:
+    # Clamp: a negative LIMIT is a PostgreSQL error (was a 500).
     rows = await session.execute(
-        select(QueryLog).where(QueryLog.user_id == user.id).order_by(QueryLog.created_at.desc()).limit(min(limit, 50))
+        select(QueryLog)
+        .where(QueryLog.user_id == user.id)
+        .order_by(QueryLog.created_at.desc())
+        .limit(max(1, min(limit, 50)))
     )
     return [
         HistoryItem(

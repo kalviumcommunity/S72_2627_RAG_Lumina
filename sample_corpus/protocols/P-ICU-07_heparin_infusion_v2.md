@@ -1,6 +1,6 @@
 # P-ICU-07 Heparin Infusion Protocol (Adult ICU)
 
-> **SYNTHETIC — FOR DEMO ONLY.** Fictional document written for the ProtoCite demo corpus of the fictional "Demo Health Network" (DHN). It is not clinical guidance and must not be used for patient care. **This version has been superseded by version 3.**
+> **SYNTHETIC — FOR DEMO ONLY.** Fictional document written for the Lumina demo corpus of the fictional "Demo Health Network" (DHN). It is not clinical guidance and must not be used for patient care. **This version has been superseded by version 3.**
 
 | Field | Value |
 |---|---|

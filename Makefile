@@ -1,7 +1,7 @@
-.PHONY: help setup dev migrate seed ingest-sample test eval lint fmt audit-verify
+.PHONY: help setup dev migrate seed ingest-sample test e2e eval lint fmt audit-verify
 
 help:
-	@echo "ProtoCite Development Makefile"
+	@echo "Lumina Development Makefile"
 	@echo "--------------------------------"
 	@echo "  setup         - Install backend and frontend dependencies"
 	@echo "  dev           - Run local development services"
@@ -9,6 +9,7 @@ help:
 	@echo "  seed          - Seed initial demo users, branches, and contacts"
 	@echo "  ingest-sample - Ingest synthetic protocol corpus"
 	@echo "  test          - Run all backend and frontend unit/integration tests"
+	@echo "  e2e           - Run Playwright against a running app on http://localhost:8001"
 	@echo "  eval          - Run safety and retrieval evaluation harness"
 	@echo "  lint          - Run Ruff and ESLint"
 	@echo "  fmt           - Format code with Ruff and Prettier"
@@ -32,18 +33,21 @@ ingest-sample:
 
 test:
 	cd backend && uv run pytest
-	cd frontend && npm test
+	cd frontend && pnpm test
+
+e2e:
+	cd frontend && pnpm build && pnpm e2e
 
 eval:
 	cd backend && uv run python -m eval.run_eval
 
 lint:
 	cd backend && uv run ruff check .
-	cd frontend && npm run lint
+	cd frontend && pnpm lint
 
 fmt:
 	cd backend && uv run ruff format .
-	cd frontend && npm run format
+	cd frontend && pnpm format
 
 audit-verify:
 	cd backend && uv run python -m scripts.verify_audit

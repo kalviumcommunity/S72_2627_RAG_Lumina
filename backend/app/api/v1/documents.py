@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
+import tempfile
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Annotated
 
@@ -37,11 +39,13 @@ from app.schemas.document import (
 )
 from app.services import audit, jobs
 from app.services.ingestion.metadata import MetadataInput, extract_metadata, validate_metadata
-from app.services.ingestion.parser import SUPPORTED_EXTENSIONS, parse_file
+from app.services.ingestion.parser import SUPPORTED_EXTENSIONS, ParseError, parse_file
 from app.services.ingestion.pipeline import MIME_BY_SUFFIX, refresh_version_statuses, sha256_bytes, store_file
 from app.services.ingestion.supersession import VersionInfo, current_version, section_matches
 
 router = APIRouter(tags=["documents"])
+
+INGEST_JOB_TIMEOUT_S = 900  # matches WorkerSettings.job_timeout
 
 
 # --------------------------------------------------------------------------------------------------
@@ -203,18 +207,29 @@ async def get_document(
 @router.post("/documents/extract-metadata", response_model=ExtractedMetadataOut)
 async def extract_from_file(user: AuthorUser, file: Annotated[UploadFile, File()]) -> ExtractedMetadataOut:
     """Pre-fill the upload form from the document header (nothing is stored)."""
-    import tempfile
-
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in SUPPORTED_EXTENSIONS:
         raise ValidationFailedError(f"Unsupported file type {suffix or '(none)'}")
+    settings = get_settings()
     data = await file.read()
-    with tempfile.TemporaryDirectory() as tmp:
-        path = Path(tmp) / f"upload{suffix}"
-        path.write_bytes(data)
-        settings = get_settings()
-        parsed = parse_file(path, ocr_languages=settings.ocr_languages, ocr_dpi=200)
-    meta = extract_metadata(parsed.full_text)
+    if len(data) > settings.max_upload_mb * 1024 * 1024:
+        raise ValidationFailedError(f"File exceeds {settings.max_upload_mb} MB")
+    if not data:
+        raise ValidationFailedError("File is empty")
+
+    def read_header() -> str:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / f"upload{suffix}"
+            path.write_bytes(data)
+            return parse_file(path, ocr_languages=settings.ocr_languages, ocr_dpi=200).full_text
+
+    # Parsing (and OCR of scanned PDFs) is CPU-bound: run it off the event loop so other requests
+    # are not frozen while a scan is read.
+    try:
+        full_text = await asyncio.to_thread(read_header)
+    except ParseError as exc:
+        raise ValidationFailedError(f"Could not read the file: {exc}") from exc
+    meta = extract_metadata(full_text)
     return ExtractedMetadataOut(**meta.__dict__)
 
 
@@ -387,6 +402,11 @@ async def reingest(document_id: uuid.UUID, version_id: uuid.UUID, user: AuthorUs
     version = await _get_version(session, document_id, version_id)
     if version.status != VersionStatus.draft:
         raise ConflictError("Only draft versions can be re-processed")
+    # Two concurrent ingestions of one version would both rewrite its chunks. A job that has been
+    # "processing" for longer than the worker's job timeout is treated as dead and may be restarted.
+    stale_before = datetime.now(UTC) - timedelta(seconds=INGEST_JOB_TIMEOUT_S)
+    if version.ingest_status == IngestStatus.processing and version.updated_at > stale_before:
+        raise ConflictError("This version is already being processed", code="ingest_in_progress")
     version.ingest_status = IngestStatus.pending
     await session.commit()
     mode = await jobs.enqueue("ingest_document", str(version_id), str(user.id))

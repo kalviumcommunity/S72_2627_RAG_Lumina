@@ -120,6 +120,7 @@ class Orchestrator:
         self.s = services
         self.settings = services.settings
         self._timings: dict[str, int] = {}
+        self._trace: dict[str, Any] = {}
 
     async def answer(
         self, session: AsyncSession, question: str, user: User, branch_id: uuid.UUID | None
@@ -158,6 +159,7 @@ class Orchestrator:
             await _discard(retrieval_task)
             raise
         timings["route"] = _ms(stage)
+        self._trace = {"route_reason": route.reason, "route_source": route.source}
         yield QueryEvent(
             "route",
             RouteEvent(
@@ -201,6 +203,13 @@ class Orchestrator:
         timings["retrieve"] = int(retrieval.timings_ms.get("total", 0))
         timings["retrieve_wait"] = _ms(stage)
         min_rel = self.settings.min_relevance
+        self._trace.update(
+            expansions=[f"{term} = {meaning}" for term, meaning in retrieval.expansions],
+            key_terms=retrieval.key_terms,
+            uncovered_terms=retrieval.uncovered_terms,
+            dropped_by_authority=retrieval.dropped_by_authority,
+            top_relevance=round(retrieval.top_relevance, 4),
+        )
 
         def useful(c: Candidate) -> bool:
             # Relevant by the re-ranker, or it names the specific thing asked about (key term).
@@ -534,6 +543,7 @@ class Orchestrator:
             model_id=self.s.model_id,
             prompt_version=self.s.prompts.version,
             retrieval=retrieval_summary,
+            trace={**self._trace, "timings_ms": response.timings_ms},
         )
         session.add(query_log)
         answer_log = AnswerLog(

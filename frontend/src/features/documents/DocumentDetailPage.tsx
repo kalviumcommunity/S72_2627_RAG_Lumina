@@ -1,96 +1,95 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { clsx } from "clsx";
-import {
-  ArrowLeft,
-  Archive,
-  CheckCircle2,
-  ChevronDown,
-  FileWarning,
-  GitMerge,
-  Loader2,
-  RefreshCw,
-  ScanText,
-  Upload,
-  XCircle,
-} from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Archive, Check, ChevronDown, RefreshCw, ScanText, Upload } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import { Link, useParams } from "react-router";
 import remarkGfm from "remark-gfm";
 
-import { AdminPage } from "../../app/layout/AppShell";
+import { Page, SectionTitle } from "../../app/layout/Page";
+import { paths } from "../../app/paths";
 import { useAuth } from "../../app/providers";
-import { Badge } from "../../components/ui/Badge";
+import { Badge, TaxonomyChip } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Dialog } from "../../components/ui/Dialog";
 import { ErrorNotice } from "../../components/ui/EmptyState";
 import { Skeleton } from "../../components/ui/Skeleton";
+import { RuleList } from "../../components/ui/Table";
 import { useToast } from "../../components/ui/Toast";
 import { api, errorMessage } from "../../lib/api";
 import { hasRole } from "../../lib/auth";
 import { daysUntil, formatDate, formatDateTime, percent, sectionLabel } from "../../lib/format";
-import type { ActionResult, ChunkPreview, DocumentDetail, Supersession, Version } from "../../lib/types";
+import { queries, queryKeys } from "../../lib/queries";
+import type { ActionResult, Supersession, Version } from "../../lib/types";
+import { AmendmentList } from "../supersessions/AmendmentList";
 import { DOC_TYPE_LABEL } from "./labels";
 import { StatusBadge } from "./shared";
 import { UploadDialog } from "./UploadDialog";
 
+/** One document: its versions, warnings, approval and the amendments it makes or receives. */
 export function DocumentDetailPage() {
   const { documentId = "" } = useParams();
   const [uploadOpen, setUploadOpen] = useState(false);
   const doc = useQuery({
-    queryKey: ["document", documentId],
-    queryFn: () => api.get<DocumentDetail>(`/documents/${documentId}`),
+    ...queries.document(documentId),
     refetchInterval: (q) =>
       q.state.data?.versions.some((v) => ["pending", "processing"].includes(v.ingest_status)) ? 1500 : false,
   });
 
   if (doc.isLoading) {
     return (
-      <AdminPage>
-        <Skeleton className="h-10 w-1/2" />
-        <Skeleton className="mt-4 h-48 w-full" />
-      </AdminPage>
+      <Page title="Document">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="mt-4 h-16 w-2/3" />
+        <Skeleton className="mt-10 h-48 w-full" />
+      </Page>
     );
   }
   if (doc.isError || !doc.data) {
     return (
-      <AdminPage>
+      <Page title="Document">
         <ErrorNotice message={errorMessage(doc.error)} />
-      </AdminPage>
+      </Page>
     );
   }
   const d = doc.data;
   const pendingLinks = (versionId: string) =>
     d.supersessions_out.filter((s) => s.source_version_id === versionId && !s.confirmed);
+  const amendedBy = d.supersessions_in.filter((s) => s.confirmed);
 
   return (
-    <AdminPage>
-      <Link to="/admin/documents" className="mb-3 inline-flex items-center gap-1 text-sm">
-        <ArrowLeft className="h-4 w-4" aria-hidden /> All documents
+    <Page title={d.doc_code}>
+      <Link
+        to={paths.library}
+        className="inline-flex items-center gap-1.5 text-sm text-ink no-underline hover:underline"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden /> Library
       </Link>
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="font-mono text-sm font-semibold text-accent-text">{d.doc_code}</p>
-          <h1 className="text-2xl font-semibold tracking-tight">{d.title}</h1>
-          <p className="mt-1 text-sm text-muted">
-            {DOC_TYPE_LABEL[d.doc_type]}
-            {d.department ? ` · ${d.department.name}` : ""} · Owner: {d.owner?.display_name ?? "—"} ·{" "}
+
+      <header className="mb-10 mt-6 flex flex-wrap items-end justify-between gap-6">
+        <div className="max-w-4xl">
+          <p className="flex flex-wrap items-center gap-3">
+            <span className="font-mono text-sm">{d.doc_code}</span>
+            <TaxonomyChip>{DOC_TYPE_LABEL[d.doc_type]}</TaxonomyChip>
+          </p>
+          <h1 className="mt-4 text-display">{d.title}</h1>
+          <p className="mt-4 text-caption text-muted">
+            {d.department?.name ?? "No department"} · Owner {d.owner?.display_name ?? "—"} ·{" "}
             {d.applies_to_all_branches ? "All branches" : `${d.branches.map((b) => b.name).join(", ")} only`}
           </p>
         </div>
-        <Button variant="secondary" onClick={() => setUploadOpen(true)}>
+        <Button variant="outline" onClick={() => setUploadOpen(true)}>
           <Upload className="h-4 w-4" /> Upload new version
         </Button>
-      </div>
+      </header>
 
-      {d.supersessions_in.some((s) => s.confirmed) ? (
-        <div className="mb-4 flex items-start gap-2 rounded-xl border border-amber-border bg-amber-soft px-3 py-2 text-sm">
-          <GitMerge className="mt-0.5 h-4 w-4 text-amber" aria-hidden />
+      {amendedBy.length ? (
+        <div className="mb-10 rounded-sm border border-blue/20 bg-blue-wash px-5 py-4 text-sm">
+          <p className="mono-label mb-1 text-blue">Amended</p>
           <p>
             Amended by{" "}
-            {d.supersessions_in
-              .filter((s) => s.confirmed)
+            {amendedBy
               .map(
                 (s) =>
                   `${s.source_doc_code} v${s.source_version_label}${s.target_section_path ? ` (${sectionLabel(s.target_section_path)})` : ""}`,
@@ -101,20 +100,20 @@ export function DocumentDetailPage() {
         </div>
       ) : null}
 
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">Versions</h2>
-      <div className="space-y-3">
-        {d.versions.map((v) => (
-          <VersionCard key={v.id} documentId={d.id} version={v} pendingLinks={pendingLinks(v.id)} />
-        ))}
-      </div>
+      <section aria-label="Versions">
+        <SectionTitle>Versions ({d.versions.length})</SectionTitle>
+        <div className="space-y-4">
+          {d.versions.map((v) => (
+            <VersionCard key={v.id} documentId={d.id} version={v} pendingLinks={pendingLinks(v.id)} />
+          ))}
+        </div>
+      </section>
 
       {d.supersessions_out.length ? (
-        <>
-          <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-muted">
-            Sections this document amends
-          </h2>
-          <LinkTable links={d.supersessions_out} documentId={d.id} />
-        </>
+        <section aria-label="Sections this document amends" className="mt-14">
+          <SectionTitle>Sections this document amends</SectionTitle>
+          <AmendmentList links={d.supersessions_out} documentId={d.id} />
+        </section>
       ) : null}
 
       <UploadDialog
@@ -127,7 +126,7 @@ export function DocumentDetailPage() {
           department_code: d.department?.code,
         }}
       />
-    </AdminPage>
+    </Page>
   );
 }
 
@@ -138,12 +137,21 @@ function useDocAction(documentId: string) {
     mutationFn: ({ url, body }: { url: string; body?: unknown }) => api.post<ActionResult>(url, body),
     onSuccess: (result) => {
       notify(result.message);
-      void queryClient.invalidateQueries({ queryKey: ["document", documentId] });
-      void queryClient.invalidateQueries({ queryKey: ["documents"] });
-      void queryClient.invalidateQueries({ queryKey: ["supersessions"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.document(documentId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.documents });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.supersessions });
     },
     onError: (err) => notify("Action failed", { description: errorMessage(err), tone: "error" }),
   });
+}
+
+function Meta({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <dt className="mono-label text-muted">{label}</dt>
+      <dd className="mt-1 text-sm">{children}</dd>
+    </div>
+  );
 }
 
 function VersionCard({
@@ -167,48 +175,22 @@ function VersionCard({
   const warnings = (v.parse_warnings as { code?: string; message?: string }[]).filter((w) => w.message);
 
   return (
-    <Card className={clsx("p-4", v.is_current && "border-success/40")}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <p className="flex flex-wrap items-center gap-2 font-semibold">
-            Version {v.version_label}
-            <StatusBadge status={v.status} />
-            {v.is_current ? <Badge tone="success">In force</Badge> : null}
-            {processing ? (
-              <Badge>
-                <Loader2 className="h-3 w-3 animate-spin" aria-hidden /> Processing
-              </Badge>
-            ) : v.ingest_status === "failed" ? (
-              <Badge tone="danger">Processing failed</Badge>
-            ) : null}
-          </p>
-          <p className="text-sm text-muted">
-            Effective {formatDate(v.effective_from)} ·{" "}
-            <span
-              className={clsx(
-                reviewDays !== null && reviewDays < 0 && v.status === "approved" && "font-medium text-danger",
-              )}
-            >
-              review due {formatDate(v.review_due)}
-            </span>{" "}
-            · {v.original_filename}
-            {v.approved_at ? ` · approved ${formatDateTime(v.approved_at)}` : ""}
-          </p>
-          <p className="text-xs text-muted">
-            {v.chunk_count} clauses indexed{v.parser ? ` · parsed with ${v.parser}` : ""}
-            {v.page_count ? ` · ${String(v.page_count)} page(s)` : ""}
-            {v.ocr_min_confidence !== null ? (
-              <span className="ml-1 inline-flex items-center gap-1">
-                · <ScanText className="h-3 w-3" aria-hidden /> OCR confidence {percent(v.ocr_min_confidence)}
-              </span>
-            ) : null}
-          </p>
-          {v.change_summary ? <p className="text-sm">{v.change_summary}</p> : null}
+    <Card className={clsx("p-6", v.is_current && "border-green")}>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <h3 className="text-feature">Version {v.version_label}</h3>
+          <StatusBadge status={v.status} />
+          {v.is_current ? <Badge tone="success">In force</Badge> : null}
+          {processing ? (
+            <Badge>Processing…</Badge>
+          ) : v.ingest_status === "failed" ? (
+            <Badge tone="danger">Processing failed</Badge>
+          ) : null}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           {v.status === "draft" && v.needs_ocr_acknowledgement ? (
             <Button
-              variant="secondary"
+              variant="outline"
               size="sm"
               loading={action.isPending}
               onClick={() => action.mutate({ url: `${base}/acknowledge-ocr` })}
@@ -222,40 +204,56 @@ function VersionCard({
               disabled={processing || v.ingest_status === "failed" || v.needs_ocr_acknowledgement}
               onClick={() => setApproveOpen(true)}
             >
-              <CheckCircle2 className="h-4 w-4" /> Approve
+              <Check className="h-4 w-4" /> Approve
             </Button>
           ) : null}
           {v.status === "draft" && !processing ? (
-            <Button variant="ghost" size="sm" onClick={() => action.mutate({ url: `${base}/reingest` })}>
+            <Button variant="link" size="sm" onClick={() => action.mutate({ url: `${base}/reingest` })}>
               <RefreshCw className="h-4 w-4" /> Re-process
             </Button>
           ) : null}
           {v.status !== "retired" && v.status !== "draft" && canApprove ? (
-            <Button variant="ghost" size="sm" onClick={() => setRetireOpen(true)}>
+            <Button variant="link" size="sm" onClick={() => setRetireOpen(true)}>
               <Archive className="h-4 w-4" /> Retire
             </Button>
           ) : null}
         </div>
       </div>
 
+      <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-6">
+        <Meta label="Effective">{formatDate(v.effective_from)}</Meta>
+        <Meta label="Review due">
+          <span
+            className={clsx(reviewDays !== null && reviewDays < 0 && v.status === "approved" && "text-error")}
+          >
+            {formatDate(v.review_due)}
+          </span>
+        </Meta>
+        <Meta label="Approved">{v.approved_at ? formatDateTime(v.approved_at) : "—"}</Meta>
+        <Meta label="Clauses">{v.chunk_count}</Meta>
+        <Meta label="Parsed with">
+          {v.parser ?? "—"}
+          {v.page_count ? ` · ${String(v.page_count)} p.` : ""}
+        </Meta>
+        <Meta label="OCR">
+          {v.ocr_min_confidence !== null ? percent(v.ocr_min_confidence) : "not scanned"}
+        </Meta>
+      </dl>
+      <p className="mt-4 truncate font-mono text-xs text-muted">{v.original_filename}</p>
+      {v.change_summary ? <p className="mt-3 text-sm">{v.change_summary}</p> : null}
+
       {v.ingest_error ? (
-        <div className="mt-3">
+        <div className="mt-4">
           <ErrorNotice title="Processing failed" message={v.ingest_error} />
         </div>
       ) : null}
       {warnings.length ? (
-        <ul className="mt-3 space-y-1.5">
+        <ul className="mt-4 space-y-2">
           {warnings.map((w, i) => (
-            <li
-              key={i}
-              className={clsx(
-                "flex items-start gap-2 rounded-lg border px-3 py-2 text-sm",
-                w.code === "ocr_low_confidence"
-                  ? "border-amber-border bg-amber-soft"
-                  : "border-border bg-surface-2",
-              )}
-            >
-              <FileWarning className="mt-0.5 h-4 w-4 shrink-0 text-amber" aria-hidden />
+            <li key={i} className="rounded-sm border border-coral-soft bg-coral-wash px-4 py-3 text-sm">
+              <span className="mono-label mr-2 text-coral-ink">
+                {w.code === "ocr_low_confidence" ? "Check OCR" : "Warning"}
+              </span>
               {w.message}
             </li>
           ))}
@@ -267,7 +265,7 @@ function VersionCard({
           type="button"
           onClick={() => setShowChunks(!showChunks)}
           aria-expanded={showChunks}
-          className="mt-3 inline-flex min-h-10 items-center gap-1 text-sm font-medium text-accent-text"
+          className="mt-5 inline-flex min-h-9 items-center gap-1.5 text-sm underline decoration-hairline underline-offset-4 hover:decoration-ink"
         >
           <ChevronDown
             className={clsx("h-4 w-4 transition-transform", showChunks && "rotate-180")}
@@ -297,8 +295,8 @@ function VersionCard({
         title={`Retire version ${v.version_label}?`}
         description="Retired versions are never used in answers and any amendments they made stop applying."
       >
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => setRetireOpen(false)}>
+        <div className="flex items-center justify-end gap-4">
+          <Button variant="link" onClick={() => setRetireOpen(false)}>
             Cancel
           </Button>
           <Button
@@ -340,44 +338,41 @@ function ApproveDialog({
       description={`Clinicians will see it in answers from ${formatDate(version.effective_from)}. This is recorded in the audit log.`}
     >
       {links.length ? (
-        <div className="mb-4 space-y-2">
-          <p className="text-sm font-medium">Amendments detected in this document:</p>
-          <ul className="space-y-1.5">
+        <div className="mb-6 space-y-3">
+          <p className="mono-label text-ink">Amendments found in this document</p>
+          <ul className="space-y-2">
             {links.map((l) => (
-              <li
-                key={l.id}
-                className="rounded-lg border border-amber-border bg-amber-soft px-3 py-2 text-sm"
-              >
-                Replaces <strong>{l.target_doc_code}</strong>
+              <li key={l.id} className="rounded-sm border border-coral-soft bg-coral-wash px-4 py-3 text-sm">
+                Replaces <span className="font-medium">{l.target_doc_code}</span>
                 {l.target_section_path ? ` ${sectionLabel(l.target_section_path)}` : " (whole document)"}
                 {l.hides_sections.length ? (
-                  <span className="block text-xs text-muted">
+                  <span className="block text-micro text-muted">
                     Will hide: {l.hides_sections.map(sectionLabel).join(", ")}
                   </span>
                 ) : null}
                 {l.evidence ? (
-                  <span className="mt-1 block text-xs italic text-muted">“{l.evidence}”</span>
+                  <span className="mt-1 block text-micro italic text-muted">“{l.evidence}”</span>
                 ) : null}
               </li>
             ))}
           </ul>
-          <label className="flex min-h-11 items-center gap-2 text-sm">
+          <label className="flex min-h-11 items-center gap-3 text-sm">
             <input
               type="checkbox"
               checked={confirmLinks}
               onChange={(e) => setConfirmLinks(e.target.checked)}
-              className="h-4 w-4 accent-[var(--accent)]"
+              className="h-4 w-4 accent-black"
             />
             Also confirm these amendments (the amended clauses stop appearing in answers)
           </label>
         </div>
       ) : null}
-      <div className="flex justify-end gap-2">
-        <Button variant="secondary" onClick={() => onOpenChange(false)}>
+      <div className="flex items-center justify-end gap-4">
+        <Button variant="link" onClick={() => onOpenChange(false)}>
           Cancel
         </Button>
         <Button loading={pending} onClick={() => onApprove(links.length > 0 && confirmLinks)}>
-          <CheckCircle2 className="h-4 w-4" /> Approve
+          <Check className="h-4 w-4" /> Approve
         </Button>
       </div>
     </Dialog>
@@ -385,91 +380,27 @@ function ApproveDialog({
 }
 
 function ChunkList({ documentId, versionId }: { documentId: string; versionId: string }) {
-  const chunks = useQuery({
-    queryKey: ["chunks", versionId],
-    queryFn: () => api.get<ChunkPreview[]>(`/documents/${documentId}/versions/${versionId}/chunks`),
-  });
-  if (chunks.isLoading) return <Skeleton className="mt-2 h-24 w-full" />;
+  const chunks = useQuery(queries.chunks(documentId, versionId));
+  if (chunks.isLoading) return <Skeleton className="mt-3 h-24 w-full" />;
   if (chunks.isError) return <ErrorNotice message={errorMessage(chunks.error)} />;
   return (
-    <ol className="mt-2 max-h-96 space-y-2 overflow-y-auto rounded-xl border border-border p-2">
+    <RuleList className="mt-3 max-h-[28rem] overflow-y-auto">
       {(chunks.data ?? [])
         .filter((c) => !c.heading.includes(" — row "))
         .map((c) => (
-          <li key={c.id} className="rounded-lg bg-surface-2 px-3 py-2">
-            <p className="text-sm font-semibold">
-              <span className="text-accent-text">{sectionLabel(c.section_path)}</span> {c.heading}
-              <span className="ml-2 text-xs font-normal text-muted">
+          <li key={c.id} className="py-3">
+            <p className="flex flex-wrap items-baseline gap-x-3">
+              <span className="mono-label text-muted">{sectionLabel(c.section_path)}</span>
+              <span className="font-medium">{c.heading}</span>
+              <span className="mono-label text-muted">
                 p.{c.page_start} · {c.token_count} tokens{c.is_table ? " · table" : ""}
               </span>
             </p>
-            <div className="prose-source text-sm">
+            <div className="prose-source mt-1 text-sm">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{c.text}</ReactMarkdown>
             </div>
           </li>
         ))}
-    </ol>
-  );
-}
-
-export function LinkTable({ links, documentId }: { links: Supersession[]; documentId?: string }) {
-  const { session } = useAuth();
-  const canApprove = hasRole(session?.user, "approver");
-  const queryClient = useQueryClient();
-  const { notify } = useToast();
-  const change = useMutation({
-    mutationFn: async ({ id, confirm }: { id: string; confirm: boolean }): Promise<void> => {
-      if (confirm) await api.patch<Supersession>(`/supersessions/${id}`, { confirmed: true });
-      else await api.del<ActionResult>(`/supersessions/${id}`);
-    },
-    onSuccess: (_, vars) => {
-      notify(vars.confirm ? "Amendment confirmed" : "Suggestion rejected");
-      void queryClient.invalidateQueries({ queryKey: ["supersessions"] });
-      if (documentId) void queryClient.invalidateQueries({ queryKey: ["document", documentId] });
-    },
-    onError: (err) => notify("Could not update the link", { description: errorMessage(err), tone: "error" }),
-  });
-  return (
-    <Card className="divide-y divide-border">
-      {links.map((l) => (
-        <div key={l.id} className="flex flex-wrap items-start justify-between gap-3 p-4">
-          <div className="min-w-0 space-y-1">
-            <p className="flex flex-wrap items-center gap-2 font-medium">
-              {l.source_doc_code} v{l.source_version_label}
-              <span className="text-muted">amends</span>
-              {l.target_doc_code}
-              {l.target_section_path ? ` ${sectionLabel(l.target_section_path)}` : " (whole document)"}
-              {l.confirmed ? (
-                <Badge tone="success">Confirmed</Badge>
-              ) : (
-                <Badge tone="amber">Suggested — needs review</Badge>
-              )}
-              {l.source_status !== "approved" ? <Badge>{l.source_status} source</Badge> : null}
-            </p>
-            <p className="text-sm text-muted">
-              From {formatDate(l.effective_from)}
-              {l.hides_sections.length
-                ? ` · hides ${l.hides_sections.map(sectionLabel).join(", ")}`
-                : " · hides nothing yet"}
-            </p>
-            {l.evidence ? <p className="text-xs italic text-muted">“{l.evidence}”</p> : null}
-          </div>
-          {!l.confirmed && canApprove ? (
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                loading={change.isPending}
-                onClick={() => change.mutate({ id: l.id, confirm: true })}
-              >
-                <CheckCircle2 className="h-4 w-4" /> Confirm
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => change.mutate({ id: l.id, confirm: false })}>
-                <XCircle className="h-4 w-4" /> Reject
-              </Button>
-            </div>
-          ) : null}
-        </div>
-      ))}
-    </Card>
+    </RuleList>
   );
 }

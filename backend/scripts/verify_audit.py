@@ -23,7 +23,9 @@ async def main() -> int:
         async with session_scope() as session:
             result = await verify_chain(session)
             if result.ok:
-                print(f"[OK] Audit chain valid. {result.events_checked} events verified with cryptographic hash-chaining.")
+                print(
+                    f"[OK] Audit chain valid. {result.events_checked} events verified with cryptographic hash-chaining."
+                )
                 return 0
             else:
                 print(f"[FAIL] Audit chain compromised at sequence {result.first_bad_seq}! Reason: {result.reason}")

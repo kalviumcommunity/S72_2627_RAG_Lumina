@@ -8,9 +8,12 @@ import {
   type TextareaHTMLAttributes,
 } from "react";
 
+// Rectangular inputs with a thin grey border; the focused field gets the violet border and the
+// blue keyboard ring from the base styles.
 const control =
-  "w-full rounded-xl border border-border-strong bg-surface px-3 text-text placeholder:text-muted " +
-  "focus:border-accent focus:outline-none focus-visible:outline-3 focus-visible:outline-offset-1 disabled:opacity-60";
+  "w-full rounded-xs border border-hairline bg-canvas px-3 text-ink placeholder:text-muted " +
+  "transition-colors focus:border-input-focus focus:outline-none focus-visible:outline-2 " +
+  "focus-visible:outline-focus disabled:bg-stone disabled:opacity-70 aria-[invalid=true]:border-error";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input(
   { className, ...rest },
@@ -54,16 +57,16 @@ export function Field({
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
     <div className={clsx("flex flex-col gap-1.5", className)}>
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-sm font-medium text-ink">
         {label}
       </label>
       {children({ id, "aria-describedby": describedBy, "aria-invalid": error ? true : undefined })}
       {error ? (
-        <p id={`${id}-error`} className="text-sm text-danger">
+        <p id={`${id}-error`} className="text-sm text-error">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="text-sm text-muted">
+        <p id={`${id}-hint`} className="text-caption text-muted">
           {hint}
         </p>
       ) : null}

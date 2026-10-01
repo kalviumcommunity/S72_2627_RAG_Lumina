@@ -53,7 +53,26 @@ graph LR
     API --> Audit[("Cryptographic Audit Log")]
 ```
 
-For full details and sequence flows, see [docs/architecture.md](docs/architecture.md).
+For full details and sequence flows, see [docs/architecture.md](docs/architecture.md). For what every
+page does and the order a visitor sees them in, see [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
+
+### Pages at a glance
+
+The app has four sections — **Ask**, **Library**, **Review** and **Admin** — one per job:
+
+| Section · page | Address | Who | Purpose |
+|---|---|---|---|
+| Sign-in | `/` (signed out) | everyone | Pick a demo user (or hospital SSO) |
+| **Ask** | `/` | everyone | Ask a question → verified answer with clause citations, or who to call |
+| **Library** · Documents, document | `/library`, `/library/:id` | author+ | Upload drafts, check warnings and clauses, approve (approver) |
+| **Review** · Amendments | `/review/amendments` | author+ | Confirm which circular replaces which clause |
+| **Review** · Conflicts | `/review/conflicts` | author+ | Resolve disagreements between current documents |
+| **Review** · Feedback | `/review/feedback` | author+ | Answer clinicians' reports about answers |
+| **Admin** · Insights | `/admin` | admin | Usage, AI usage and decision traces, every user's activity, all documents, amendments, conflicts and feedback |
+| **Admin** · Audit log | `/admin/audit` | admin | Tamper-evident history; check the hash chain |
+
+Old `/admin/documents`, `/admin/supersessions`, … addresses redirect to their new homes. The visual
+language is documented in [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
 
 ---
 
@@ -66,7 +85,7 @@ For full details and sequence flows, see [docs/architecture.md](docs/architectur
 | **Embeddings & Re-ranking** | `sentence-transformers` (`intfloat/multilingual-e5-base`), CrossEncoder (`BAAI/bge-reranker-base`) |
 | **LLM Providers** | Pluggable interface: Google Gemini (`gemini-3.5-flash-lite`, `gemini-3.6-flash`), Anthropic Claude, or local Ollama |
 | **Safety & Verification** | Presidio Analyzer & Anonymizer, Independent LLM Judge Citation Verification Gate |
-| **Frontend Web** | React 19, TypeScript, Vite, Tailwind CSS v4, Radix UI primitives, Motion, TanStack Query, React Router |
+| **Frontend Web** | React 19, TypeScript, Vite, Tailwind CSS v4 (token-based design system: Space Grotesk / Inter / Space Mono, self-hosted), Radix UI primitives, TanStack Query, React Router |
 | **Mobile / PWA** | `vite-plugin-pwa` (offline shell, recent sources cached), `react-pdf` text-layer highlighting |
 | **Audit & Testing** | Hash-chained append-only log, Pytest, Vitest, Playwright, Ruff, ESLint |
 
@@ -88,7 +107,8 @@ For full details and sequence flows, see [docs/architecture.md](docs/architectur
    # Edit .env and paste your GEMINI_API_KEY (or configure Ollama)
    ```
 
-3. **Start all services:**
+3. **Start all services** (the first start creates the database, seeds the demo users and loads the
+   synthetic sample documents automatically):
    ```bash
    docker compose up --build
    ```
@@ -122,13 +142,16 @@ For full details and sequence flows, see [docs/architecture.md](docs/architectur
 2. **Frontend setup (in a separate terminal):**
    ```bash
    cd frontend
-   npm install
-   npm run dev
+   pnpm install
+   pnpm dev          # http://localhost:5173 (or `pnpm build` and the API serves it on :8001)
    ```
 
 ---
 
 ## 5. Live Interactive Demo Walkthrough
+
+A full click-by-click script with talking points and likely questions is in
+[docs/PITCH_GUIDE.md](docs/PITCH_GUIDE.md).
 
 ### Scenario 1: Supersession in Action ("Old Protocol vs New Circular")
 1. Open [http://localhost:5173](http://localhost:5173).
@@ -159,26 +182,33 @@ For full details and sequence flows, see [docs/architecture.md](docs/architectur
 
 ## 6. Testing & Quality Verification
 
-Run the comprehensive test suites across both stacks:
+| Suite | Tests | Command |
+|---|---:|---|
+| Backend unit | 222 | `cd backend && uv run pytest tests/unit` |
+| Backend API — **all 38 endpoints**, every role (needs PostgreSQL + pgvector) | 54 | `cd backend && TEST_DATABASE_URL=… uv run pytest tests/integration` |
+| Frontend — **every page and component** | 86 | `cd frontend && pnpm test` |
+| End-to-end in Chromium — every page as every role, desktop + phone | 17 | `cd frontend && pnpm build && pnpm e2e` (API running on :8001) |
 
 ```bash
-# Run all backend unit & integration tests (252+ tests)
-cd backend && uv run pytest
-
-# Run frontend tests (Vitest - 41 tests)
-cd frontend && npm test
-
-# Verify cryptographic audit chain integrity
+# Verify the cryptographic audit chain
 cd backend && uv run python -m scripts.verify_audit
 
-# Run the safety and evaluation benchmark harness
+# Safety and retrieval evaluation harness
 cd backend && uv run python -m eval.run_eval
 ```
+
+Details: [docs/TESTING.md](docs/TESTING.md). Bugs found and fixed in the latest audit:
+[docs/AUDIT_REPORT.md](docs/AUDIT_REPORT.md).
 
 ---
 
 ## 7. Project Documentation Index
 
+- [User Flow & Page Guide](docs/USER_GUIDE.md) — what every page does, in the order users see them
+- [Pitch Guide](docs/PITCH_GUIDE.md) — demo script, talking points, Q&A
+- [Design System](docs/DESIGN_SYSTEM.md) — colours, type, components and page patterns
+- [Audit Report](docs/AUDIT_REPORT.md) — bugs found and fixed
+- [Testing Guide](docs/TESTING.md)
 - [PRD (Product Requirements Document)](docs/PRD.md)
 - [System Architecture & Diagrams](docs/architecture.md)
 - [Intended Use Statement & CDSCO Considerations](docs/intended-use.md)

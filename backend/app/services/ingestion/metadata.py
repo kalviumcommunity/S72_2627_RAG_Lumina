@@ -14,20 +14,37 @@ from app.models.enums import DocType
 
 DOC_CODE_RE = re.compile(r"^[A-Z]{1,5}(?:-[A-Z0-9]{1,6}){1,3}$")
 
+_DATE = r"(\d{4}-\d{2}-\d{2}|\d{1,2}\s+[A-Za-z]+\s+\d{4})"
+# Labels must start a line ("Version: 2", or a header-table row "| Version | 2 |" once flattened), so
+# prose such as "superseded by version 3" or "amends P-ICU-07 version 3" is never read as metadata.
 _FIELD_PATTERNS: dict[str, re.Pattern[str]] = {
     "doc_code": re.compile(
-        r"(?:document\s+code|doc(?:ument)?\s+(?:no|number|id)|reference)\s*[:\-]\s*([A-Z]{1,5}(?:-[A-Z0-9]{1,6}){1,3})",
-        re.I,
+        r"^\s*(?:document\s+code|doc(?:ument)?\s+(?:no|number|id)|(?:circular|sop|protocol)\s+(?:no|number)|"
+        r"reference)\.?\s*[:\-]\s*([A-Z]{1,5}(?:-[A-Z0-9]{1,6}){1,3})\b",
+        re.I | re.M,
     ),
-    "version_label": re.compile(r"\bversion\s*[:\-]?\s*v?(\d+(?:\.\d+)?)\b", re.I),
-    "effective_from": re.compile(
-        r"effective\s+(?:from|date)?\s*[:\-]?\s*(\d{4}-\d{2}-\d{2}|\d{1,2}\s+[A-Za-z]+\s+\d{4})", re.I
-    ),
-    "review_due": re.compile(
-        r"(?:review\s+(?:due|date)|next\s+review)\s*[:\-]?\s*(\d{4}-\d{2}-\d{2}|\d{1,2}\s+[A-Za-z]+\s+\d{4})",
-        re.I,
-    ),
+    "version_label": re.compile(r"^\s*version\s*[:\-]?\s*v?(\d+(?:\.\d+)?)\b", re.I | re.M),
+    "effective_from": re.compile(r"^\s*effective(?:\s+(?:from|date))?\s*[:\-]?\s*" + _DATE, re.I | re.M),
+    "review_due": re.compile(r"^\s*(?:review\s+(?:due|date)|next\s+review)\s*[:\-]?\s*" + _DATE, re.I | re.M),
 }
+_TABLE_RULE = re.compile(r"^\|?(\s*:?-{3,}:?\s*\|?)+$")
+
+
+def _flatten_header_tables(text: str) -> str:
+    """Markdown table rows become "Label: value" lines ("| Version | 2 |" → "Version: 2")."""
+    lines: list[str] = []
+    for line in text.splitlines():
+        row = line.strip()
+        if not (row.startswith("|") and row.endswith("|")):
+            lines.append(line)
+            continue
+        if _TABLE_RULE.match(row):
+            continue
+        cells = [c.strip() for c in row.strip("|").split("|")]
+        lines.append(f"{cells[0]}: {' '.join(cells[1:])}" if len(cells) > 1 else cells[0])
+    return "\n".join(lines)
+
+
 _MONTHS = {
     m: i
     for i, m in enumerate(
@@ -75,7 +92,7 @@ class ExtractedMetadata:
 
 
 def extract_metadata(text: str) -> ExtractedMetadata:
-    head = text[:4000]
+    head = _flatten_header_tables(text[:4000])
     found = ExtractedMetadata()
     for name, pattern in _FIELD_PATTERNS.items():
         match = pattern.search(head)

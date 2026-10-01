@@ -1,6 +1,6 @@
 # C-2026-09 Circular: Heparin Nomogram Amendment
 
-> **SYNTHETIC — FOR DEMO ONLY.** Fictional circular written for the ProtoCite demo corpus of the fictional "Demo Health Network" (DHN). It is not clinical guidance and must not be used for patient care.
+> **SYNTHETIC — FOR DEMO ONLY.** Fictional circular written for the Lumina demo corpus of the fictional "Demo Health Network" (DHN). It is not clinical guidance and must not be used for patient care.
 
 | Field | Value |
 |---|---|

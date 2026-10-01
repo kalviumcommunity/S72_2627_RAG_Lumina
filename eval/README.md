@@ -1,6 +1,6 @@
-# Evaluation Harness & Safety Benchmarking — ProtoCite
+# Evaluation Harness & Safety Benchmarking — Lumina
 
-This directory houses the safety, retrieval, and groundedness evaluation harness for ProtoCite.
+This directory houses the safety, retrieval, and groundedness evaluation harness for Lumina.
 
 ---
 

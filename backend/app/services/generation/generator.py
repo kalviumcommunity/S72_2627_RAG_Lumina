@@ -355,7 +355,7 @@ def extractive_answer(
         probe = f"{question} ({expansions})" if expansions else question
         try:
             semantic = unit_scorer(probe, [f"{u.passage.candidate.heading}: {u.text}" for u in units])
-        except Exception:  # noqa: BLE001  the relevance model is an optional refinement
+        except Exception:  # the relevance model is an optional refinement
             semantic = [0.0] * len(units)
     scored = sorted(
         ((u, _lexical_score(u, query) + _prior(u, query) + 1.5 * s) for u, s in zip(units, semantic, strict=True)),
@@ -395,6 +395,9 @@ def extractive_answer(
                 if q.unit:
                     label_words = re.findall(r"[A-Za-z]+", unit.text[: q.start])[-3:]
                     quick.append({"label": " ".join(label_words) or "Value", "value": q.raw, "source": marker})
+
+    # One key value per distinct value: "6 hours after starting … and 6 hours after every change" is one value.
+    quick = list({(q["value"].lower(), q["source"]): q for q in reversed(quick)}.values())[::-1]
 
     by_marker = {p.marker: p for p in passages}
     for note in conflicts:

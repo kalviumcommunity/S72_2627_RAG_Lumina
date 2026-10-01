@@ -1,6 +1,6 @@
 # C-2026-14 Circular: Piperacillin-Tazobactam Becomes a Restricted Antimicrobial
 
-> **SYNTHETIC — FOR DEMO ONLY.** Fictional circular written for the ProtoCite demo corpus of the fictional "Demo Health Network" (DHN). It is not clinical guidance and must not be used for patient care.
+> **SYNTHETIC — FOR DEMO ONLY.** Fictional circular written for the Lumina demo corpus of the fictional "Demo Health Network" (DHN). It is not clinical guidance and must not be used for patient care.
 
 | Field | Value |
 |---|---|
